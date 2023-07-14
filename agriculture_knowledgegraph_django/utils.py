@@ -100,7 +100,7 @@ def sendEmailAgri(email: str, link: str, type: int):
                 <h1>农业知识图谱</h1>
                 <h3>亲爱的用户</h3>
                 <h3>请点击以下链接完成您的{methods[type]}。</h3>
-                <a href="{link}">{link}</a>
+                <a style:"word-wrap:break-word;" href="{link}">点击此处</a>
                 <h3>此邮件为自动生成邮件，请勿回复。</h3>
             </div>
         </body>
