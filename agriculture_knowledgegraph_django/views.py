@@ -40,9 +40,7 @@ def verifyEmailCode(request):
     # 获取邮箱和验证码
     email = request['email']
     vcode = request['vcode']
-
-    # 删除验证码
-    # 加入已验证邮箱表
+    
     pass
 
 def accountRegistration(request):
