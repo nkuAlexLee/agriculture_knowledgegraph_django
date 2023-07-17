@@ -55,4 +55,5 @@ class SYS_EMAIL_CODE(models.Model):
     ID = models.CharField(max_length=30, primary_key=True)
     CODE = models.IntegerField()
     TYPE = models.CharField(max_length=10)
-    EXPIRE = models.CharField(max_length=10)
+    MSG=models.CharField(max_length=100,null=True)
+    SEND_TIMESTAMP = models.CharField(max_length=10)
