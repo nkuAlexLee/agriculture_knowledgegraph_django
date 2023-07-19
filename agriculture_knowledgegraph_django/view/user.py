@@ -309,7 +309,6 @@ def deleteUserRealNameMessage(request):
         return json_response({"success": False, "content":{},"log": "method-is-not-POST"})
 
     # 验证ID和token
-
     try:
         user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
     except SYS_USER_TOKEN.DoesNotExist:
