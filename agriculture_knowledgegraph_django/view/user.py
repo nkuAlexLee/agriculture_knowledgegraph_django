@@ -26,7 +26,7 @@ def login(request):
         password = request.POST.get('password')
         print(request)
     else:
-        return json_response({"success": False, content:"","log": "method-is-not-POST"})
+        return json_response({"success": False, "content":"","log": "method-is-not-POST"})
     # 获取邮箱/ID、密码和token
     # 更新随机token
     # 验证ID、密码和token

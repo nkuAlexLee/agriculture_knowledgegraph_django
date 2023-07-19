@@ -78,8 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'agriculture_knowledgegraph',  # 数据库名
-        'USER': 'root',  # 数据库用户名
-        'PASSWORD': 'sjr1277463846',  # 数据库密码
+        'USER': 'ShmilyYu',  # 数据库用户名
+        'PASSWORD': 'yu242698',  # 数据库密码
         'HOST': 'localhost',  # 数据库主机名或IP地址
         'PORT': '3306',  # 数据库端口号（默认为3306）
     }
