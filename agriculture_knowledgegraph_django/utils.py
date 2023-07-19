@@ -104,8 +104,8 @@ def sendEmail(email_addr: str, content: dict, type: str):
 
 
 def sendEmailAgri(email: str, link: str, type: int):
-    '''后端接口调用这个,type:0:注册;1:忘记密码;2:换绑邮箱'''
-    methods = ["帐号注册操作", "重置密码操作", "换绑邮箱操作"]
+    '''后端接口调用这个,type:0:注册;1:注销;2:忘记密码;3:换绑邮箱'''
+    methods = ["帐号注册操作", "账号注销操作", "重置密码操作", "换绑邮箱操作"]
     html = f"""
         <body>
             <div style="width: 100%;display: flex;justify-content: center;align-items: center;flex-direction: column;">

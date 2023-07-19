@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, \
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 from django.views.decorators.csrf import csrf_exempt
+from utils import aesDecrypt, codeEncrypt, sendEmailAgri
 import json
 import time
 import random
@@ -26,6 +27,9 @@ def sendEmailVerification(request):
 
     # 生成6位随机数验证码
     code = random.randint(100000, 999999)
+
+    # 邮箱解密
+    email = aesDecrypt(email)
 
     # 写入邮箱验证码表
     # 若不存在该邮箱，则在邮箱验证码表写入入参信息
@@ -57,6 +61,10 @@ def verifyEmailCode(request):
     # 获取邮箱和验证码
     email = request['email']
     vcode = request['vcode']
+
+    # 邮箱验证码解密
+    email = aesDecrypt(email)
+    vcode = aesDecrypt(vcode)
 
     query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
     if query.exists():
@@ -99,9 +107,26 @@ def accountRegistration(request):
     # 获取邮箱
     email = request['email']
 
+    # 邮箱解密
+    email = aesDecrypt(email)
+
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    pass
+    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    if query.exists():
+        # 已存在该邮箱
+        code = query.first().CODE
+        link = codeEncrypt(code, email)
+        success = sendEmailAgri(email, link, 0)
+        if success:
+            # 发送成功
+            return {"success": True, "vcode": code, "log": "F0001"}
+        else:
+            # 发送失败
+            return {"success": False, "vcode": code, "log": "F0002"}
+    else:
+        # 不存在该邮箱
+        return {"success": False, "log": "F0002"}
 
 
 def accountCancellation(request):
@@ -118,9 +143,26 @@ def accountCancellation(request):
     # 获取邮箱
     email = request['email']
 
+    # 邮箱解密
+    email = aesDecrypt(email)
+
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    pass
+    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    if query.exists():
+        # 已存在该邮箱
+        code = query.first().CODE
+        link = codeEncrypt(code, email)
+        success = sendEmailAgri(email, link, 1)
+        if success:
+            # 发送成功
+            return {"success": True, "vcode": code, "log": "F0001"}
+        else:
+            # 发送失败
+            return {"success": False, "vcode": code, "log": "F0002"}
+    else:
+        # 不存在该邮箱
+        return {"success": False, "log": "F0002"}
 
 
 def updateUserEmail(request):
@@ -137,9 +179,26 @@ def updateUserEmail(request):
     # 获取邮箱
     email = request['email']
 
+    # 邮箱解密
+    email = aesDecrypt(email)
+
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    pass
+    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    if query.exists():
+        # 已存在该邮箱
+        code = query.first().CODE
+        link = codeEncrypt(code, email)
+        success = sendEmailAgri(email, link, 3)
+        if success:
+            # 发送成功
+            return {"success": True, "vcode": code, "log": "F0001"}
+        else:
+            # 发送失败
+            return {"success": False, "vcode": code, "log": "F0002"}
+    else:
+        # 不存在该邮箱
+        return {"success": False, "log": "F0002"}
 
 
 def forgetPassword(request):
@@ -156,6 +215,23 @@ def forgetPassword(request):
     # 获取邮箱
     email = request['email']
 
+    # 邮箱解密
+    email = aesDecrypt(email)
+
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    pass
+    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    if query.exists():
+        # 已存在该邮箱
+        code = query.first().CODE
+        link = codeEncrypt(code, email)
+        success = sendEmailAgri(email, link, 2)
+        if success:
+            # 发送成功
+            return {"success": True, "vcode": code, "log": "F0001"}
+        else:
+            # 发送失败
+            return {"success": False, "vcode": code, "log": "F0002"}
+    else:
+        # 不存在该邮箱
+        return {"success": False, "log": "F0002"}
