@@ -16,15 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from agriculture_knowledgegraph_django.views.email import (
-    sendEmailVerification,
-    verifyEmailCode,
-    accountRegistration,
-    accountCancellation,
-    updateUserEmail,
-    forgetPassword,
-)
-from agriculture_knowledgegraph_django.views.user import (
+from agriculture_knowledgegraph_django.view.user import (
     login,
     getUserMessage,
     updateUserPassword,
@@ -35,9 +27,19 @@ from agriculture_knowledgegraph_django.views.user import (
     updateUserRealNameMessage,
     deleteUserRealNameMessage,
 )
-from agriculture_knowledgegraph_django.views.test import (
+from agriculture_knowledgegraph_django.view.email import (
+    forgetPassword,
+    updateUserEmail,
+    accountCancellation,
+    accountRegistration,
+    verifyEmailCode,
+    sendEmailVerification,
+)
+
+from agriculture_knowledgegraph_django.view.test import(
     testSendMessage,
 )
+
 
 urlpatterns = [
 # 其他URL配置

@@ -20,9 +20,9 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 		<script>
 			function sendData() {
-				let test_msg = [['input_text',$('#inputText').val()]];
+				let test_msg = [['login','100000001'],['is_id',true],['password','xy639a58']];
 				console.log(test_msg);
-				let xmlcon = new XMLConnector('http://127.0.0.1:8000/testSendMessage/', 'POST', test_msg, result, wating, timeout);
+				let xmlcon = new XMLConnector('http://127.0.0.1:8000/login/', 'POST', test_msg, result, wating, timeout);
 				xmlcon.send();
 			}
 			function timeout(){
