@@ -16,14 +16,14 @@ class SYS_USER(models.Model):
     AVATAR = models.BinaryField(null=True)
 
 class SYS_USER_IP(models.Model):
-    ID = models.ForeignKey(SYS_USER, on_delete=models.CASCADE)
+    ID =  models.IntegerField(primary_key=True)
     CN_IP = models.CharField(max_length=30, null=True)
     FG_IP = models.CharField(max_length=30, null=True)
     IP = models.CharField(max_length=30)
 
 
 class SYS_USER_FEEDBACK(models.Model):
-    ID = models.ForeignKey(SYS_USER, on_delete=models.CASCADE)
+    ID =  models.IntegerField(primary_key=True)
     CREATE_TIME = models.IntegerField()
     TYPE = models.CharField(max_length=10)
     MSG = models.TextField()
@@ -33,7 +33,7 @@ class SYS_USER_FEEDBACK(models.Model):
     IMG_3 = models.BinaryField(null=True)
 
 class SYS_USER_NAME(models.Model):
-    ID = models.ForeignKey(SYS_USER, on_delete=models.CASCADE)
+    ID =  models.IntegerField(primary_key=True)
     NAME = models.CharField(max_length=50)
     TEL = models.CharField(max_length=30)
     CARD_TYPE = models.CharField(max_length=10)
@@ -48,7 +48,7 @@ class SYS_LOG(models.Model):
     USER_ID = models.IntegerField()
 
 class SYS_USER_TOKEN(models.Model):
-    ID = models.ForeignKey(SYS_USER, on_delete=models.CASCADE)
+    ID = models.IntegerField(primary_key=True)
     TOKEN = models.CharField(max_length=16)
 
 class SYS_EMAIL_CODE(models.Model):

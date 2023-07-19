@@ -8,6 +8,7 @@ import string
 from django.views.decorators.csrf import csrf_exempt
 
 #水木
+@csrf_exempt
 def login(request):
     """
     函数名：login
@@ -23,37 +24,33 @@ def login(request):
         login = request.POST.get('login')
         is_id = request.POST.get('is_id')
         password = request.POST.get('password')
+        print(request)
     else:
-        return json_response({"success": False, content:"","error": "method-is-not-POST"})
+        return json_response({"success": False, content:"","log": "method-is-not-POST"})
     # 获取邮箱/ID、密码和token
     # 更新随机token
     # 验证ID、密码和token
     try:
-
-        try:
-            if is_id:
-                user = SYS_USER.objects.get(ID=login)
-                
-            else:
-                user = SYS_USER.objects.get(EMAIL=login)
-        except SYS_USER.DoesNotExist:
-            success = False
-            content = None
-            log = "账号不存在"
-            return {
-                'success': success,
-                'content': '',
-                'log': log
-            }
+        if is_id:
+            user = SYS_USER.objects.get(ID=login)
+            
+        else:
+            user = SYS_USER.objects.get(EMAIL=login)
         
         if user.PASSWORD == password:
             success = True
-            userMessage = getUserMessage(request)
-            userMessage = getUserRealNameMessage(request)
-            content = {**userMessage, **userMessage} 
             token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
             user_token = SYS_USER_TOKEN(ID=user, TOKEN=token)
             user_token.save()
+            data = {
+                'id': user.ID,
+                'token': token,
+                'internal_access':True,
+            }
+            userMessage = getUserMessage(data)
+            userRealNameMessage= getUserRealNameMessage(data)
+            # print(userMessage,userRealNameMessage)
+            content = {**userMessage["content"], **userRealNameMessage["content"]} 
             log = "success"
             return json_response({
                 'success': success,
@@ -89,12 +86,36 @@ def getUserRealNameMessage(request):
         content: 需要读取的内容
         log: 日志信息
     """
-    # 获取ID和token
-    id = request['id']
-    token = request['token']
+    try:
+        if request['internal_access']==True:
+            id = request['id']
+            token = request['token']
+    except:
+    #获取ID和token
+        if request.method == "POST":
+            id = request.POST.get('id')
+            token = request.POST.get('token')
+        else:
+            return json_response({"success": False, content:"","log": "method-is-not-POST"})
+    
+    # 比对id和token的值
+    try:
+        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": "", "log": "invalid-id-or-token"})
 
-    # 返回参数content和log
-    pass
+    # 读取用户实名信息
+    try:
+        user_name = SYS_USER_NAME.objects.get(ID=user_token.ID)
+        user_info = {
+            "name": user_name.NAME,
+            "tel": user_name.TEL,
+            "card_type": user_name.CARD_TYPE,
+            "id_card": user_name.IDCARD
+        }
+        return json_response({"success": True, "content": user_info, "log": "success"})
+    except SYS_USER_NAME.DoesNotExist:
+        return json_response({"success": False, "content": "", "log": "user-info-not-found"})
 
 def getUserMessage(request):
     """
@@ -108,11 +129,42 @@ def getUserMessage(request):
         log: 日志信息
     """
     # 获取ID和token
-    id = request['id']
-    token = request['token']
-
-    # 返回参数content和log
-    pass
+    try:
+        if request['internal_access']==True:
+            id = request['id']
+            token = request['token']
+    except:
+    #获取ID和token
+        if request.method == "POST":
+            id = request.POST.get('id')
+            token = request.POST.get('token')
+        else:
+            return json_response({"success": False, content:"","log": "method-is-not-POST"})
+    
+    # 比对id和token的值
+    try:
+        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": "", "log": "invalid-id-or-token"})
+    # 读取用户基本信息
+    try:
+        user_name = SYS_USER.objects.get(ID=user_token.ID)
+        user_info = {
+            "login_name": user_name.LOGIN_NAME,
+            "user_type": user_name.USER_TYPE,
+            "sex": user_name.SEX,
+            "born_time": user_name.BORN_TIME,
+            "create_time": user_name.CREATE_TIME,
+            "error_count": user_name.ERROR_COUNT,
+            "status": user_name.STATUS,
+            "lock_time": user_name.LOCK_TIME,
+            "occupation": user_name.OCCUPATION,
+            "email": user_name.EMAIL,
+            "avatar": user_name.AVATAR,
+        }
+        return json_response({"success": True, "content": user_info, "log": "success"})
+    except SYS_USER.DoesNotExist:
+        return json_response({"success": False, "content": "", "log": "user-info-not-found"})
 
 def updateAcountInformation(request):
     """
@@ -268,3 +320,7 @@ def updateUserIP(request):
     # 更新用户IP地址表
     # 返回参数log
     pass
+
+def json_response(answer):
+    print(answer)
+    return HttpResponse(json.dumps(answer, ensure_ascii=False))
