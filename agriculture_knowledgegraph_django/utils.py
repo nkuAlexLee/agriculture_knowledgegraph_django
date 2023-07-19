@@ -2,24 +2,28 @@
 from email.header import Header       # 邮件主题
 from email.mime.text import MIMEText        # 邮件正文
 from email.mime.multipart import MIMEMultipart          # 提供邮件对象
-import smtplib # 自带（好像
-from Crypto.Cipher import AES # pip install pycryptodome
-from binascii import b2a_hex, a2b_hex 
+
+import smtplib  # 自带（好像
+from Crypto.Cipher import AES  # pip install pycryptodome
+from binascii import b2a_hex, a2b_hex
 from Crypto import Random
 import base64
-from verify_email import verify_email # pip install verify-email
+from verify_email import verify_email  # pip install verify-email
+
 import time
 
 # 关于AES加密配置
 key = "ABCDEF0123456789"
 BLOCK_SIZE = 16  # Bytes
-pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * \
-                chr(BLOCK_SIZE - len(s) % BLOCK_SIZE)
-unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+def pad(s): return s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * \
+    chr(BLOCK_SIZE - len(s) % BLOCK_SIZE)
+
+
+def unpad(s): return s[:-ord(s[len(s) - 1:])]
 # 关于AES加密配置
 
 
-def aesEncrypt(data:str, key=key):
+def aesEncrypt(data: str, key=key):
     '''
     AES的ECB模式加密方法
     :param key: **
@@ -37,7 +41,7 @@ def aesEncrypt(data:str, key=key):
     return enctext
 
 
-def aesDecrypt(data:str, key=key):
+def aesDecrypt(data: str, key=key):
     '''
     :param key: **
     :param data: 加密后的数据（密文）
@@ -54,14 +58,15 @@ def aesDecrypt(data:str, key=key):
     return text_decrypted
 
 
-def base64Encode(str:str):
+def base64Encode(str: str):
     return base64.b64encode(str.encode()).decode()
 
 
-def base64Decode(str:str):
+def base64Decode(str: str):
     return base64.b64decode(str.encode()).decode()
 
-def sendEmail(email_addr:str, content:dict, type:str):
+
+def sendEmail(email_addr: str, content: dict, type: str):
     '''发送邮件 type选填plain、html'''
     # 检查邮箱
     # 使用verify_email函数验证电子邮件
@@ -69,9 +74,9 @@ def sendEmail(email_addr:str, content:dict, type:str):
     # 检查验证值是否为True
     if verify:
         sender = {
-            "email":"264921247@qq.com",
-            "key":"tdqijtppzbzocaeb",
-            "sender":"264921247@qq.com <264921247@qq.com>"
+            "email": "264921247@qq.com",
+            "key": "tdqijtppzbzocaeb",
+            "sender": "264921247@qq.com <264921247@qq.com>"
         }
         # 1)连接邮箱服务器
         con = smtplib.SMTP_SSL("smtp.qq.com", 465)
@@ -101,8 +106,8 @@ def sendEmail(email_addr:str, content:dict, type:str):
 
 
 def sendEmailAgri(email: str, link: str, type: int):
-    '''后端接口调用这个,type:0:注册;1:忘记密码;2:换绑邮箱'''
-    methods = ["帐号注册操作", "重置密码操作", "换绑邮箱操作"]
+    '''后端接口调用这个,type:0:注册;1:注销;2:忘记密码;3:换绑邮箱'''
+    methods = ["帐号注册操作", "账号注销操作", "重置密码操作", "换绑邮箱操作"]
     html = f"""
         <body>
             <div style="width: 100%;display: flex;justify-content: center;align-items: center;flex-direction: column;">
@@ -114,15 +119,16 @@ def sendEmailAgri(email: str, link: str, type: int):
             </div>
         </body>
     """
-    return sendEmail(email, {"header":"农业知识图谱验证信息", "content":html}, "html")
+
+    return sendEmail(email, {"header": "农业知识图谱验证信息", "content": html}, "html")
 
 
-def codeEncrypt(code:str, email:str):
+def codeEncrypt(code: str, email: str):
     '''后端接口调用这个,完成对验证码的加密操作,返回发送链接 int(time.time()*1000)'''
     send_dict = {
-        "vcode":code,
-        "email":email,
-        "timestamp":int(time.time()*1000)
+        "vcode": code,
+        "email": email,
+        "timestamp": int(time.time()*1000)
     }
     send_dict = str(send_dict).replace("'", '"')
     send_dict = aesEncrypt(send_dict, key)
@@ -130,10 +136,13 @@ def codeEncrypt(code:str, email:str):
     link = f"http://localhost:8080/#/verify/{send_dict}"
     return link
 
+
 code = "123456"
 to_email = "2112794@mail.nankai.edu.cn"
 link = codeEncrypt(code, to_email)
 success = sendEmailAgri("2112794@mail.nankai.edu.cn", link, 1)
-print(success) # True
+
+
+print(success)  # True
 success = sendEmailAgri("211sadcadad2794@mail.nankai.edu.cn", link, 1)
-print(success) # False
+print(success)  # False
