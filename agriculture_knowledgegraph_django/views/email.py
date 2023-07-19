@@ -23,9 +23,12 @@ def sendEmailVerification(request):
         log: 日志信息
     """
     # 获取邮箱、类型和附加信息
-    email = request['email']
-    type = request['type']
-    msg = request['msg']
+    if request.method == "POST":
+        email = request.POST.get('email')
+        type = request.POST.get('type')
+        msg = request.POST.get('msg')
+    else:
+        return json_response({"success": False, "log": "request_is_not_post"})
 
     # 生成6位随机数验证码
     code = random.randint(100000, 999999)
@@ -42,12 +45,12 @@ def sendEmailVerification(request):
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
                      SEND_TIMESTAMP=time.time()*1000)
-        return {"success": True, "log": "F0001"}
+        return json_response({"success": True, "log": "request_is_not_post"})
     else:
         # 不存在该邮箱
         SYS_EMAIL_CODE.objects.create(
             ID=email, CODE=code, TYPE=type, MSG=msg, SEND_TIMESTAMP=time.time()*1000)
-        return {"success": True, "log": "F0001"}
+        return json_response({"success": True, "log": "success"})
 
 
 def verifyEmailCode(request):
@@ -61,8 +64,11 @@ def verifyEmailCode(request):
         log: 日志信息
     """
     # 获取邮箱和验证码
-    email = request['email']
-    vcode = request['vcode']
+    if request.method == "POST":
+        email = request.POST.get('email')
+        vcode = request.POST.get('vcode')
+    else:
+        return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱验证码解密
     email = aesDecrypt(email)
@@ -71,28 +77,28 @@ def verifyEmailCode(request):
     query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
     if query.exists():
         # 已存在该邮箱
-        if time.time() * 1000 - query.first().SEND_TIMESTAMP >= 60 * 5 * 1000:
+        if time.time() * 1000 - query.first().SEND_TIMESTAMP <= 60 * 5 * 1000:
             # 超过5分钟
             if query.first().TYPE == 0:
                 # 注册邮箱
                 accountRegistration(request)
-                return {"success": True, "log": "F0001"}
+                return json_response({"success": True, "log": "success"})
             elif query.first().TYPE == 1:
                 # 注销邮箱
                 accountCancellation(request)
-                return {"success": True, "log": "F0001"}
+                return json_response({"success": True, "log": "success"})
             elif query.first().TYPE == 2:
                 # 忘记密码
                 forgetPassword(request)
-                return {"success": True, "log": "F0001"}
+                return json_response({"success": True, "log": "success"})
             else:
                 # 更新邮箱
                 updateUserEmail(request)
-                return {"success": True, "log": "F0001"}
+                return json_response({"success": True, "log": "success"})
         else:
-            return {"success": False, "log": "F0004"}
+            return json_response({"success": False, "log": "exceed_5_minutes"})
     else:
-        return {"success": False, "log": "F0005"}
+        return json_response({"success": False, "log": "email_not_find"})
 
 
 def accountRegistration(request):
@@ -107,7 +113,10 @@ def accountRegistration(request):
         log: 日志信息
     """
     # 获取邮箱
-    email = request['email']
+    if request.method == "POST":
+        email = request.POST.get('email')
+    else:
+        return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
     email = aesDecrypt(email)
@@ -122,13 +131,13 @@ def accountRegistration(request):
         success = sendEmailAgri(email, link, 0)
         if success:
             # 发送成功
-            return {"success": True, "vcode": code, "log": "F0001"}
+            return json_response({"success": True, "vcode": code, "log": "success"})
         else:
             # 发送失败
-            return {"success": False, "vcode": code, "log": "F0002"}
+            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return {"success": False, "log": "F0002"}
+        return json_response({"success": False, "log": "email_not_find"})
 
 
 def accountCancellation(request):
@@ -143,7 +152,10 @@ def accountCancellation(request):
         log: 日志信息
     """
     # 获取邮箱
-    email = request['email']
+    if request.method == "POST":
+        email = request.POST.get('email')
+    else:
+        return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
     email = aesDecrypt(email)
@@ -158,13 +170,13 @@ def accountCancellation(request):
         success = sendEmailAgri(email, link, 1)
         if success:
             # 发送成功
-            return {"success": True, "vcode": code, "log": "F0001"}
+            return json_response({"success": True, "vcode": code, "log": "success"})
         else:
             # 发送失败
-            return {"success": False, "vcode": code, "log": "F0002"}
+            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return {"success": False, "log": "F0002"}
+        return json_response({"success": False, "log": "email_not_find"})
 
 
 def updateUserEmail(request):
@@ -179,7 +191,10 @@ def updateUserEmail(request):
         log: 日志信息
     """
     # 获取邮箱
-    email = request['email']
+    if request.method == "POST":
+        email = request.POST.get('email')
+    else:
+        return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
     email = aesDecrypt(email)
@@ -194,13 +209,13 @@ def updateUserEmail(request):
         success = sendEmailAgri(email, link, 3)
         if success:
             # 发送成功
-            return {"success": True, "vcode": code, "log": "F0001"}
+            return json_response({"success": True, "vcode": code, "log": "success"})
         else:
             # 发送失败
-            return {"success": False, "vcode": code, "log": "F0002"}
+            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return {"success": False, "log": "F0002"}
+        return json_response({"success": False, "log": "email_not_find"})
 
 
 def forgetPassword(request):
@@ -215,7 +230,10 @@ def forgetPassword(request):
         log: 日志信息
     """
     # 获取邮箱
-    email = request['email']
+    if request.method == "POST":
+        email = request.POST.get('email')
+    else:
+        return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
     email = aesDecrypt(email)
@@ -231,10 +249,15 @@ def forgetPassword(request):
         success = sendEmailAgri(email, link, 2)
         if success:
             # 发送成功
-            return {"success": True, "vcode": code, "log": "F0001"}
+            return json_response({"success": True, "vcode": code, "log": "success"})
         else:
             # 发送失败
-            return {"success": False, "vcode": code, "log": "F0002"}
+            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return {"success": False, "log": "F0002"}
+        return json_response({"success": False, "log": "email_not_find"})
+
+
+def json_response(answer):
+    print(answer)
+    return HttpResponse(json.dumps(answer, ensure_ascii=False))
