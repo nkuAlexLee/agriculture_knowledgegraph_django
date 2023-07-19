@@ -3,8 +3,10 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, \
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
-import json
 from django.views.decorators.csrf import csrf_exempt
+import json
+import time
+import random
 
 
 def sendEmailVerification(request):
@@ -22,11 +24,24 @@ def sendEmailVerification(request):
     type = request['type']
     msg = request['msg']
 
+    # 生成6位随机数验证码
+    code = random.randint(100000, 999999)
+
     # 写入邮箱验证码表
     # 若不存在该邮箱，则在邮箱验证码表写入入参信息
     # 若已存在该邮箱，则用入参信息更新邮箱验证码表
     # 返回参数log按照子接口log返回信息
-    pass
+    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    if query.exists():
+        # 已存在该邮箱
+        query.update(CODE=code, TYPE=type, MSG=msg,
+                     SEND_TIMESTAMP=time.time()*1000)
+        return {"success": True, "log": "F0001"}
+    else:
+        # 不存在该邮箱
+        SYS_EMAIL_CODE.objects.create(
+            ID=email, CODE=code, TYPE=type, MSG=msg, SEND_TIMESTAMP=time.time()*1000)
+        return {"success": True, "log": "F0001"}
 
 
 def verifyEmailCode(request):
@@ -43,7 +58,31 @@ def verifyEmailCode(request):
     email = request['email']
     vcode = request['vcode']
 
-    pass
+    query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
+    if query.exists():
+        # 已存在该邮箱
+        if time.time() * 1000 - query.first().SEND_TIMESTAMP >= 60 * 5 * 1000:
+            # 超过5分钟
+            if query.first().TYPE == 0:
+                # 注册邮箱
+                accountRegistration(request)
+                return {"success": True, "log": "F0001"}
+            elif query.first().TYPE == 1:
+                # 注销邮箱
+                accountCancellation(request)
+                return {"success": True, "log": "F0001"}
+            elif query.first().TYPE == 2:
+                # 忘记密码
+                forgetPassword(request)
+                return {"success": True, "log": "F0001"}
+            else:
+                # 更新邮箱
+                updateUserEmail(request)
+                return {"success": True, "log": "F0001"}
+        else:
+            return {"success": False, "log": "F0004"}
+    else:
+        return {"success": False, "log": "F0005"}
 
 
 def accountRegistration(request):

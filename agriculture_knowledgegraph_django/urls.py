@@ -40,26 +40,30 @@ from agriculture_knowledgegraph_django.views.test import (
 )
 
 urlpatterns = [
-# 其他URL配置
+    # 其他URL配置
     path('admin/', admin.site.urls),
-    path('sendEmailVerification/', sendEmailVerification, name='send_email_verification'),
+    path('sendEmailVerification/', sendEmailVerification,
+         name='send_email_verification'),
     path('verifyEmailCode/', verifyEmailCode, name='verify_email_code'),
-    path('accountRegistration/', accountRegistration, name='account_registration'),
-    path('accountCancellation/', accountCancellation, name='account_cancellation'),
+    path('accountRegistration/', accountRegistration,
+         name='account_registration'),
+    path('accountCancellation/', accountCancellation,
+         name='account_cancellation'),
     path('updateUserEmail/', updateUserEmail, name='update_user_email'),
     path('forgetPassword/', forgetPassword, name='forget_password'),
     path('login/', login, name='login'),
     path('getUserMessage/', getUserMessage, name='get_user_message'),
-    path('updateAccountInformation/', getUserMessage, name='update_account_information'),
+    path('updateAccountInformation/', getUserMessage,
+         name='update_account_information'),
     path('updateUserPassword/', updateUserPassword, name='update_user_password'),
     path('updateUserIP/', updateUserIP, name='update_user_ip'),
     path('userFeedback/', userFeedback, name='user_feedback'),
     path('avatarSubmission/', avatarSubmission, name='avatar_submission'),
-    path('getUserRealNameMessage/', getUserRealNameMessage, name='get_user_real_name_message'),
-    path('updateUserRealNameMessage/', updateUserRealNameMessage, name='update_user_real_name_message'),
-    path('deleteUserRealNameMessage/', deleteUserRealNameMessage, name='delete_user_real_name_message'),
+    path('getUserRealNameMessage/', getUserRealNameMessage,
+         name='get_user_real_name_message'),
+    path('updateUserRealNameMessage/', updateUserRealNameMessage,
+         name='update_user_real_name_message'),
+    path('deleteUserRealNameMessage/', deleteUserRealNameMessage,
+         name='delete_user_real_name_message'),
     path('testSendMessage/', testSendMessage, name='test_send_message'),
 ]
-
-
-
