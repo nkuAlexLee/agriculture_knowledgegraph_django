@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
-from agriculture_knowledgegraph_django_model.models import SYS_USER,SYS_USER_IP,SYS_USER_FEEDBACK,SYS_USER_NAME,SYS_LOG,SYS_USER_TOKEN,SYS_EMAIL_CODE
+from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 import json
 import secrets
 import string
 from django.views.decorators.csrf import csrf_exempt
+import agriculture_knowledgegraph_django.utils
+# 水木
 
-#水木
+
 @csrf_exempt
 def login(request):
     """
@@ -26,36 +28,46 @@ def login(request):
         password = request.POST.get('password')
         print(request)
     else:
+<<<<<<< HEAD:agriculture_knowledgegraph_django/view/user.py
         return json_response({"success": False, "content":"","log": "method-is-not-POST"})
+=======
+        return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
+>>>>>>> d6b5c8187c1019fd610855379771c3c725888df4:agriculture_knowledgegraph_django/views/user.py
     # 获取邮箱/ID、密码和token
     # 更新随机token
     # 验证ID、密码和token
     try:
         if is_id:
             user = SYS_USER.objects.get(ID=login)
-            
+
         else:
             user = SYS_USER.objects.get(EMAIL=login)
-        
+
         if user.PASSWORD == password:
             success = True
-            token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
-            user_token = SYS_USER_TOKEN(ID=user, TOKEN=token)
+            token = ''.join(secrets.choice(
+                string.ascii_letters + string.digits) for _ in range(16))
+            user_token = SYS_USER_TOKEN(ID=user.ID, TOKEN=token)
             user_token.save()
             data = {
                 'id': user.ID,
                 'token': token,
-                'internal_access':True,
+                'internal_access': True,
             }
-            userMessage = getUserMessage(data)
-            userRealNameMessage= getUserRealNameMessage(data)
+            userMessage = json.loads(getUserMessage(data).content)
+            userRealNameMessage = json.loads(
+                getUserRealNameMessage(data).content)
+
+            # # 输出解码后的信息
             # print(userMessage,userRealNameMessage)
-            content = {**userMessage["content"], **userRealNameMessage["content"]} 
+            content = {**userMessage["content"],
+                       **userRealNameMessage["content"]}
+            # content=''
             log = "success"
             return json_response({
                 'success': success,
                 'content': content,
-                'token':token,
+                'token': token,
                 'log': log,
             })
 
@@ -75,6 +87,8 @@ def login(request):
         'log': log,
     })
 
+
+@csrf_exempt
 def getUserRealNameMessage(request):
     """
     函数名：getUserRealNameMessage
@@ -87,22 +101,22 @@ def getUserRealNameMessage(request):
         log: 日志信息
     """
     try:
-        if request['internal_access']==True:
+        if request['internal_access'] == True:
             id = request['id']
             token = request['token']
     except:
-    #获取ID和token
+        # 获取ID和token
         if request.method == "POST":
             id = request.POST.get('id')
             token = request.POST.get('token')
         else:
-            return json_response({"success": False, content:"","log": "method-is-not-POST"})
-    
+            return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
+
     # 比对id和token的值
     try:
         user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
     except SYS_USER_TOKEN.DoesNotExist:
-        return json_response({"success": False, "content": "", "log": "invalid-id-or-token"})
+        return json_response({"success": False, "content": {}, "log": "invalid-id-or-token"})
 
     # 读取用户实名信息
     try:
@@ -115,8 +129,10 @@ def getUserRealNameMessage(request):
         }
         return json_response({"success": True, "content": user_info, "log": "success"})
     except SYS_USER_NAME.DoesNotExist:
-        return json_response({"success": False, "content": "", "log": "user-info-not-found"})
+        return json_response({"success": False, "content": {}, "log": "user-info-not-found"})
 
+
+@csrf_exempt
 def getUserMessage(request):
     """
     函数名：getUserMessage
@@ -130,22 +146,22 @@ def getUserMessage(request):
     """
     # 获取ID和token
     try:
-        if request['internal_access']==True:
+        if request['internal_access'] == True:
             id = request['id']
             token = request['token']
     except:
-    #获取ID和token
+        # 获取ID和token
         if request.method == "POST":
             id = request.POST.get('id')
             token = request.POST.get('token')
         else:
-            return json_response({"success": False, content:"","log": "method-is-not-POST"})
-    
+            return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
+
     # 比对id和token的值
     try:
         user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
     except SYS_USER_TOKEN.DoesNotExist:
-        return json_response({"success": False, "content": "", "log": "invalid-id-or-token"})
+        return json_response({"success": False, "content": {}, "log": "invalid-id-or-token"})
     # 读取用户基本信息
     try:
         user_name = SYS_USER.objects.get(ID=user_token.ID)
@@ -164,8 +180,10 @@ def getUserMessage(request):
         }
         return json_response({"success": True, "content": user_info, "log": "success"})
     except SYS_USER.DoesNotExist:
-        return json_response({"success": False, "content": "", "log": "user-info-not-found"})
+        return json_response({"success": False, "content": {}, "log": "user-info-not-found"})
 
+
+@csrf_exempt
 def updateAcountInformation(request):
     """
     函数名：updateAcountInformation
@@ -177,16 +195,30 @@ def updateAcountInformation(request):
         log: 日志信息
     """
     # 获取ID、token和更新的信息
-    id = request['id']
-    token = request['token']
-    sex = request['sex']
-    occupation = request['occupation']
-    born_time = request['born_time']
+    if request.method == "POST":
+        id = request.POST.get('id')
+        token = request.POST.get('token')
+        sex = request.POST.get('sex')
+        occupation = request.POST.get('occupation')
+        born_time = request.POST.get('born_time')
+    else:
+        return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
 
+        # 比对id和token的值
+    try:
+        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": {}, "log": "invalid-id-or-token"})
     # 更新用户基础信息
-    # 返回参数log
-    pass
+    user = SYS_USER.objects.get(ID=id)
+    user.SEX = sex
+    user.OCCUPATION = occupation
+    user.BORN_TIME = born_time
+    user.save()
+    return json_response({"success": True, "content": {}, "log": "update-account-information-success"})
 
+
+@csrf_exempt
 def updateUserPassword(request):
     """
     函数名：updateUserPassword
@@ -197,18 +229,51 @@ def updateUserPassword(request):
         success: 是否验证成功
         log: 日志信息
     """
-    # 获取邮箱/ID、旧密码、新密码和token
-    login = request['login']
-    is_id = request['is_id']
-    old_password = request['old_password']
-    new_password = request['new_password']
-    token = request['token']
+
+    if request.method == "POST":
+        login = request.POST.get('login')
+        is_id = request.POST.get('is_id')
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        token = request.POST.get('token')
+    else:
+        return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
 
     # 验证邮箱/ID、旧密码和token
+    try:
+        if is_id:
+            user = SYS_USER.objects.get(ID=login)
+
+        else:
+            user = SYS_USER.objects.get(EMAIL=login)
+
+        try:
+            user_token = SYS_USER_TOKEN.objects.get(ID=user.ID, TOKEN=token)
+        except SYS_USER_TOKEN.DoesNotExist:
+            return json_response({"success": False, "content": {}, "log": "invalid-id-or-token"})
+
+        if user.PASSWORD == old_password:
+            user.PASSWORD = new_password
+            user.save()
+            success = True
+            content = None
+            log = "success-to-change-password"
+
+        else:
+            success = False
+            content = None
+            log = "密码错误"
+
+    except SYS_USER.DoesNotExist:
+        success = False
+        content = None
+        log = "用户不存在"
     # 更新密码
     # 返回参数log
-    pass
+    return json_response({"success": success, "content": content, "log": log})
 
+
+@csrf_exempt
 def updateUserRealNameMessage(request):
     """
     函数名：updateUserRealNameMessage
@@ -220,17 +285,34 @@ def updateUserRealNameMessage(request):
         log: 日志信息
     """
     # 获取ID、token和更新的实名信息
-    id = request['id']
-    token = request['token']
-    name = request['name']
-    tel = request['tel']
-    card_type = request['card_type']
-    id_card = request['id_card']
+    if request.method == "POST":
+        id = request.POST.get('id')
+        token = request.POST.get('token')
+        name = request.POST.get('name')
+        tel = request.POST.get('tel')
+        card_type = request.POST.get('card_type')
+        id_card = request.POST.get('id_card')
+    else:
+        return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
 
-    # 更新用户实名信息
-    # 返回参数log
-    pass
+    # 验证ID和token
 
+    try:
+        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": {}, "log": "invalid-id-or-token"})
+
+    # 更新用户基础信息
+    user = SYS_USER_NAME.objects.get(ID=id)
+    user.NAME = name
+    user.TEL = tel
+    user.CARD_TYPE = card_type
+    user.IDCARD = id_card
+    user.save()
+    return json_response({"success": True, "content": {}, "log": "update-account-information-success"})
+
+
+@csrf_exempt
 def deleteUserRealNameMessage(request):
     """
     函数名：deleteUserRealNameMessage
@@ -241,15 +323,30 @@ def deleteUserRealNameMessage(request):
         success: 是否验证成功
         log: 日志信息
     """
-    # 获取ID和token
-    id = request['id']
-    token = request['token']
+    if request.method == "POST":
+        id = request.POST.get('id')
+        token = request.POST.get('token')
+    else:
+        return json_response({"success": False, "content": {}, "log": "method-is-not-POST"})
+
+    # 验证ID和token
+    try:
+        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": {}, "log": "invalid-id-or-token"})
+
+    # 更新用户基础信息
+    user = SYS_USER_NAME.objects.get(ID=id)
+    user.delete()
+    user.save()
+    return json_response({"success": True, "content": {}, "log": "delete-account-information-success"})
 
     # 删除用户实名信息
     # 返回参数log
-    pass
 
-#ShmilAyu
+# ShmilAyu
+
+
 def userFeedback(request):
     """
     函数名：userFeedback
@@ -274,6 +371,7 @@ def userFeedback(request):
     # 返回参数log
     pass
 
+
 def avatarSubmission(request):
     """
     函数名：avatarSubmission
@@ -294,6 +392,8 @@ def avatarSubmission(request):
     pass
 
 # X-Forwarded-For:简称XFF头，它代表客户端，也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。
+
+
 def getUserIP(request):
     '''获取请求者的IP信息'''
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')  # 判断是否使用代理
@@ -302,6 +402,7 @@ def getUserIP(request):
     else:
         ip = request.META.get('REMOTE_ADDR')  # 未使用代理获取IP
     return ip
+
 
 def updateUserIP(request):
     """
@@ -320,6 +421,7 @@ def updateUserIP(request):
     # 更新用户IP地址表
     # 返回参数log
     pass
+
 
 def json_response(answer):
     print(answer)

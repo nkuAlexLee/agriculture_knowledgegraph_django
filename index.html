@@ -22,7 +22,7 @@
 			function sendData() {
 				let test_msg = [['login','100000001'],['is_id',true],['password','yu242698']];
 				console.log(test_msg);
-				let xmlcon = new XMLConnector('http://127.0.0.1:8000/login/', 'POST', test_msg, result, wating, timeout);
+				let xmlcon = new XMLConnector('http://127.0.0.1:8000/updateUserPassword/', 'POST', test_msg, result, wating, timeout);
 				xmlcon.send();
 			}
 			function timeout(){

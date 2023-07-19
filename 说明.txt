@@ -1,4 +1,4 @@
-.py mi一、配置数据库：
+一、配置数据库：
 更改settings.py中
 
 DATABASES = {
