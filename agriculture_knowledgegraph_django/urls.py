@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from agriculture_knowledgegraph_django.view.user import (
+from agriculture_knowledgegraph_django.views.user import (
     login,
     getUserMessage,
     updateUserPassword,
@@ -27,7 +27,7 @@ from agriculture_knowledgegraph_django.view.user import (
     updateUserRealNameMessage,
     deleteUserRealNameMessage,
 )
-from agriculture_knowledgegraph_django.view.email import (
+from agriculture_knowledgegraph_django.views.email import (
     forgetPassword,
     updateUserEmail,
     accountCancellation,
@@ -36,7 +36,7 @@ from agriculture_knowledgegraph_django.view.email import (
     sendEmailVerification,
 )
 
-from agriculture_knowledgegraph_django.view.test import(
+from agriculture_knowledgegraph_django.views.test import(
     testSendMessage,
 )
 
