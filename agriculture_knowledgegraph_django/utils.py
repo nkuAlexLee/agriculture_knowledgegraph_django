@@ -4,7 +4,7 @@ from email.mime.text import MIMEText        # 邮件正文
 from email.mime.multipart import MIMEMultipart          # 提供邮件对象
 
 import smtplib  # 自带（好像
-from Crypto.Cipher import AES  # pip install pycryptodome
+from Crypto.Cipher import AES  # pip install pycryptodome,cryptography
 from binascii import b2a_hex, a2b_hex
 from Crypto import Random
 import base64
