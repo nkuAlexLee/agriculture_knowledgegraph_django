@@ -97,28 +97,33 @@ def verifyEmailCode(request):
     if query.exists():
         # 已存在该邮箱
         if time.time() * 1000 - float(query.first().SEND_TIMESTAMP) <= 60 * 5 * 1000:
-            if query.first().TYPE == 0:
+            if int(query.first().TYPE) == 0:
+                user_query = SYS_USER.objects.filter(EMAIL=email)
+                if user_query.exists():
+                    return json_response({"success": False, "log": "email_already_exist"})
+                else:
+                    if SYS_USER.objects.exists():
+                        id = int(SYS_USER.objects.aggregate(
+                            Max('ID'))['ID__max'])+1
+                    else:
+                        id = 100000001
+                    password = base64AesDecrypt(SYS_EMAIL_CODE.objects.filter(
+                        ID=email).first().MSG)
+                    # 未超过5分钟
+                    SYS_USER.objects.create(
+                        ID=id,
+                        LOGIN_NAME="xxx",
+                        PASSWORD=password,
+                        USER_TYPE=1,
+                        ERROR_COUNT=0,
+                        CREATE_TIME=str(int(time.time()*1000)),
+                        STATUS=0,
+                        EMAIL=str(email),
 
-                id = SYS_USER.objects.aggregate(Max('ID'))+1
-                # 未超过5分钟
-                SYS_USER.objects.create(
-                    ID=id,
-                    LOGIN_NAME="xxx",
-                    PASSWORD="123456",
-                    USER_TYPE=1,
-                    SEX=1,
-                    BORN_TIME=date.today,
-                    CREATE_TIME=date.today,
-                    ERROR_COUNT=0,
-                    STATUS=0,
-                    LOCK_TIME=0,
-                    OCCUPATION="xxx",
-                    EMAIL=email,
-                    AVATAR="xxx"
-                )
-            elif query.first().TYPE == 1:
+                    )
+            elif int(query.first().TYPE) == 1:
                 SYS_USER.objects.filter(EMAIL=email).delete()
-            elif query.first().TYPE == 2:
+            elif int(query.first().TYPE) == 2:
                 SYS_USER.objects.filter(EMAIL=email).update(PASSWORD=msg)
             else:
                 SYS_USER.objects.filter(EMAIL=email).update(EMAIL=msg)
@@ -156,7 +161,7 @@ def accountRegistration(email, code):
             # 发送成功
             return json_response({"success": True, "log": "success"})
         else:
-            return json_response({"success": False, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "mailbox_not_exist"})
 
 
 @csrf_exempt
@@ -184,7 +189,7 @@ def accountCancellation(email, code):
             return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False,  "log": "fail_to_connect_server"})
+            return json_response({"success": False,  "log": "mailbox_not_exist"})
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_exist"})
@@ -215,7 +220,7 @@ def updateUserEmail(email, code):
             return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "mailbox_not_exist"})
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_exist"})
@@ -247,7 +252,7 @@ def forgetPassword(email, code):
             return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "mailbox_not_exist"})
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_exist"})
