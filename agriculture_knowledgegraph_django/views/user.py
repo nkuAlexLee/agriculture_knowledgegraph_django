@@ -1,3 +1,4 @@
+import sqlite3
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -67,7 +68,7 @@ def login(request):
             }
             userMessage = json.loads(getUserMessage(data).content)
             userRealNameMessage = json.loads(getUserRealNameMessage(data).content)
-            # sitecontent = getUserIP(request)
+            sitecontent = getUserIP(request)
             # # 输出解码后的信息
             # print(userMessage,userRealNameMessage)
             content = {**userMessage["content"], **userRealNameMessage["content"]}
@@ -79,7 +80,7 @@ def login(request):
                     "content": content,
                     "token": token,
                     "log": log,
-                    # "site":sitecontent,
+                    "site":sitecontent,
                 }
             )
 
@@ -409,95 +410,6 @@ def deleteUserRealNameMessage(request):
 
 
 # ShmilAyu
-def userFeedback(request):
-    """
-    函数名：userFeedback
-    功能：提交用户反馈意见或bug
-    参数：
-        request: 请求参数，包含ID、token、类型、文字信息和图片
-    返回值：
-        success: 是否验证成功
-        log: 日志信息
-    """
-    # 获取ID、token、类型、文字信息和图片
-    if request.method == "POST":
-        id = request.POST.get("id")
-        token = base64AesDecrypt(request.POST.get("token"))
-        type = request.POST.get("type")
-        msg = request.POST.get("msg")
-        img_0 = request.POST.get("img_0")
-        img_1 = request.POST.get("img_1")
-        img_2 = request.POST.get("img_2")
-        img_3 = request.POST.get("img_3")
-    else:
-        return json_response({"success": False, "log": "fail_to_connect_server"})
-    # 提交用户反馈意见或bug
-    # 返回参数log
-    try:
-        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
-    except SYS_USER_TOKEN.DoesNotExist:
-        return json_response(
-            {"success": False, "content": {}, "log": "invalid_id_or_token"}
-        )
-    try:
-        feedback = SYS_USER_FEEDBACK(
-            ID=id,
-            CREATE_TIME=int(time.time()),
-            TYPE=type,
-            MSG=msg,
-            IMG_0=img_0,
-            IMG_1=img_1,
-            IMG_2=img_2,
-            IMG_3=img_3,
-        )
-        feedback.save()
-        # print(feedback)
-        # print("提交成功")
-        return json_response({"success": True, "log": "success"})
-
-    except SYS_USER_FEEDBACK.DoesNotExist:
-        # print("提交失败")
-        return json_response({"success": False, "log": "fail_to_connect_server"})
-
-
-def avatarSubmission(request):
-    """
-    函数名：avatarSubmission
-    功能：提交用户头像
-    参数：
-        request: 请求参数，包含ID、token和头像
-    返回值：
-        success: 是否验证成功
-        log: 日志信息
-    """
-    # 获取ID、token和头像
-    if request.method == "POST":
-        id = request.POST.get("id")
-        token = base64AesDecrypt(request.POST.get("token"))
-        avatar = request.POST.get("avatar")
-    else:
-        print(request.method)
-        return json_response({"success": False, "log": "fail_to_connect_server"})
-    # 比对id和token的值
-    # 存储用户数据库头像信息
-    # 返回参数log
-    try:
-        SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
-    except SYS_USER_TOKEN.DoesNotExist:
-        return json_response(
-            {"success": False, "content": {}, "log": "invalid_id_or_token"}
-        )
-    try:
-        feedback = SYS_USER.objects.get(ID=id)
-        feedback.AVATAR = avatar
-        feedback.save()
-        return json_response({"success": True, "log": "success"})
-
-    except SYS_USER.DoesNotExist:
-        # print("提交失败")
-        return json_response({"success": False, "log": "fail_to_connect_server"})
-
-
 # X-Forwarded-For:简称XFF头，它代表客户端，也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。
 def getUserIP(request):
     """获取请求者的IP信息"""
@@ -506,10 +418,15 @@ def getUserIP(request):
         ip = x_forwarded_for.split(",")[0]  # 使用代理获取真实的ip
     else:
         ip = request.META.get("REMOTE_ADDR")  # 未使用代理获取IP
-    url = "http://ip.taobao.com/service/getIpInfo.php?ip="+str(ip)
-    response =json.loads(requests.get(url).text)
-    if response["code"]==0:
-        city=response["data"]["city"]
+    url = "https://api.vvhan.com/api/getIpInfo?ip="+str(ip)
+    response =requests.get(url)
+    if response.status_code==200:
+        content=json.loads(response.content)
+        print(content)
+        if content["success"]==True:
+            city=content["info"]["city"]
+        else:
+            city="未知"
     else:
         city="未知"
     res={"ip":ip,"city":city}
@@ -533,7 +450,7 @@ def updateUserIP(request):
     else:
         print(request.method)
         return json_response({"success": False, "log": "fail_to_connect_server"})
-    ip = getUserIP(request)
+    ip = getUserIP(request)["ip"]
     # 更新用户IP地址表
     # 返回参数log
     try:
@@ -547,6 +464,117 @@ def updateUserIP(request):
         # print("1:"+feedback.IP)
         # print("2:"+ip)
         feedback.IP = ip
+        feedback.save()
+        return json_response({"success": True, "log": "success"})
+    except SYS_USER.DoesNotExist:
+        # print("提交失败")
+        return json_response({"success": False, "log": "fail_to_connect_server"})
+
+#ShmilAyu
+def userFeedback(request):
+    """
+    函数名：userFeedback
+    功能：提交用户反馈意见或bug
+    参数：
+        request: 请求参数，包含ID、token、类型、文字信息和图片
+    返回值：
+        success: 是否验证成功
+        log: 日志信息
+    """
+    # 获取ID、token、类型、文字信息和图片
+    if(request.method=="POST"):
+        id = request.POST.get('id')
+        token = request.POST.get('token')
+        type = request.POST.get('type')
+        msg = request.POST.get('msg')
+        img_0 = sqlite3.Binary(request.POST.get('img_0'))
+        img_1 = sqlite3.Binary(request.POST.get('img_1'))
+        img_2 = sqlite3.Binary(request.POST.get('img_2'))
+        img_3 = sqlite3.Binary(request.POST.get('img_3'))
+    else:
+        return json_response({"success": False, "log": "fail_to_connect_server"})
+    # 提交用户反馈意见或bug
+    # 返回参数log
+    try:
+        user_token = SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": {}, "log": "invalid_id_or_token"})
+    try:
+        feedback = SYS_USER_FEEDBACK(ID=id, CREATE_TIME=int(time.time()), TYPE=type, MSG=msg,
+                                     IMG_0=img_0, IMG_1=img_1, IMG_2=img_2, IMG_3=img_3)
+        feedback.save()
+        # print(feedback)
+        # print("提交成功")
+        return json_response({"success": True, "log": "success"})
+
+    except SYS_USER_FEEDBACK.DoesNotExist:
+        # print("提交失败")
+        return json_response({"success": False, "log": "fail_to_connect_server"})
+
+def avatarSubmission(request):
+    """
+    函数名：avatarSubmission
+    功能：提交用户头像
+    参数：
+        request: 请求参数，包含ID、token和头像
+    返回值：
+        success: 是否验证成功
+        log: 日志信息
+    """
+    # 获取ID、token和头像
+    if request.method=="POST":
+        id = request.POST.get('id')
+        token = base64AesDecrypt(request.POST.get('token'))
+        avatar = sqlite3.Binary(request.POST.get('avatar'))
+    else:
+        print(request.method)
+        return json_response({"success": False, "log": "fail_to_connect_server"})
+    # 比对id和token的值
+    # 存储用户数据库头像信息
+    # 返回参数log
+    try:
+        SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": {}, "log": "invalid_id_or_token"})
+    try:
+        feedback = SYS_USER.objects.get(ID=id)
+        feedback.AVATAR=avatar
+        feedback.save()
+        return json_response({"success": True, "log": "success"})
+
+    except SYS_USER.DoesNotExist:
+        # print("提交失败")
+        return json_response({"success": False, "log": "fail_to_connect_server"})
+
+def updateUserIP(request):
+    """
+    函数名：updateUserIP
+    功能：更新用户IP地址
+    参数：
+        request: 请求参数，包含ID和token
+    返回值：
+        success: 是否验证成功
+        log: 日志信息
+    """
+    # 获取ID和token
+    if request.method=="POST":
+        id = request.POST.get('id')
+        token =base64AesDecrypt(request.POST.get('token'))
+    else:
+        print(request.method)
+        return json_response({"success": False, "log": "fail_to_connect_server"})
+    ip =getUserIP(request)
+    # 更新用户IP地址表
+    # 返回参数log
+    try:
+        SYS_USER_TOKEN.objects.get(ID=id, TOKEN=token)
+    except SYS_USER_TOKEN.DoesNotExist:
+        return json_response({"success": False, "content": {}, "log": "invalid_id_or_token"})
+    try:
+        feedback = SYS_USER_IP.objects.get(ID=id)
+        # print("1:"+feedback.IP)
+        # print("2:"+ip)
+        feedback.IP=ip
         feedback.save()
         return json_response({"success": True, "log": "success"})
     except SYS_USER.DoesNotExist:
