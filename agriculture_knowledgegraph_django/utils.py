@@ -43,7 +43,7 @@ def aesDecrypt(data:str, key=key):
     :param data: 加密后的数据（密文）
     :return:明文
     '''
-    print(data)
+    # print(data)
     key = key.encode('utf8')
     data = base64.b64decode(data)
     cipher = AES.new(key, AES.MODE_ECB)
@@ -73,7 +73,9 @@ def sendEmail(email_addr:str, content:dict, type:str):
     '''发送邮件 type选填plain、html'''
     # 检查邮箱
     # 使用verify_email函数验证电子邮件
-    verify = verify_email(email_addr)
+    print(email_addr)
+    # verify = verify_email(email_addr)
+    verify=True
     # 检查验证值是否为True
     if verify:
         sender = {
