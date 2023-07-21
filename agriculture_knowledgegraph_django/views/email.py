@@ -122,10 +122,11 @@ def verifyEmailCode(request):
                 SYS_USER.objects.filter(EMAIL=email).update(PASSWORD=msg)
             else:
                 SYS_USER.objects.filter(EMAIL=email).update(EMAIL=msg)
+                return json_response({"success": False, "log": "success"})
         else:
             return json_response({"success": False, "log": "exceed_5_minutes"})
     else:
-        return json_response({"success": False, "log": "email_not_find"})
+        return json_response({"success": False, "log": "email_not_exist"})
 
 
 @csrf_exempt
@@ -143,7 +144,7 @@ def accountRegistration(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         return json_response({"success": False, "log": "email_already_exist"})
@@ -172,7 +173,7 @@ def accountCancellation(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
@@ -203,7 +204,7 @@ def updateUserEmail(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
@@ -235,7 +236,7 @@ def forgetPassword(email, code):
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
 
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
