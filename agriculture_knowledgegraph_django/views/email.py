@@ -28,7 +28,7 @@ def sendEmailVerification(request):
     # 获取邮箱、类型和附加信息
     if request.method == "POST":
         email = request.POST.get('email')
-        type = request.POST.get('type')
+        type = int(request.POST.get('type'))
         msg = request.POST.get('msg')
         print("注册邮箱号：", base64AesDecrypt(email))
     else:
@@ -96,7 +96,7 @@ def verifyEmailCode(request):
     query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
     if query.exists():
         # 已存在该邮箱
-        if time.time() * 1000 - query.first().SEND_TIMESTAMP <= 60 * 5 * 1000:
+        if time.time() * 1000 - float(query.first().SEND_TIMESTAMP) <= 60 * 5 * 1000:
             if query.first().TYPE == 0:
 
                 id = SYS_USER.objects.aggregate(Max('ID'))+1
@@ -122,11 +122,12 @@ def verifyEmailCode(request):
                 SYS_USER.objects.filter(EMAIL=email).update(PASSWORD=msg)
             else:
                 SYS_USER.objects.filter(EMAIL=email).update(EMAIL=msg)
-                return json_response({"success": False, "log": "success"})
+
+            return json_response({"success": True, "log": "success"})
         else:
             return json_response({"success": False, "log": "exceed_5_minutes"})
     else:
-        return json_response({"success": False, "log": "email_not_exist"})
+        return json_response({"success": False, "log": "email_not_find"})
 
 
 @csrf_exempt
