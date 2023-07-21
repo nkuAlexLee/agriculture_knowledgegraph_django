@@ -4,14 +4,14 @@ from django.http import HttpResponse
 from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, \
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 from django.views.decorators.csrf import csrf_exempt
-from agriculture_knowledgegraph_django.utils import aesDecrypt, codeEncrypt, sendEmailAgri
+from agriculture_knowledgegraph_django.utils import base64AesDecrypt, codeEncrypt, sendEmailAgri
 import json
 import time
 import random
 
 # 锦满
 
-
+@csrf_exempt
 def sendEmailVerification(request):
     """
     函数名：sendEmailVerification
@@ -27,6 +27,7 @@ def sendEmailVerification(request):
         email = request.POST.get('email')
         type = request.POST.get('type')
         msg = request.POST.get('msg')
+        print("注册邮箱号：",base64AesDecrypt(email))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
 
@@ -34,7 +35,7 @@ def sendEmailVerification(request):
     code = random.randint(100000, 999999)
 
     # 邮箱解密
-    email = aesDecrypt(email)
+    email = base64AesDecrypt(email)
 
     # 写入邮箱验证码表
     # 若不存在该邮箱，则在邮箱验证码表写入入参信息
@@ -52,7 +53,7 @@ def sendEmailVerification(request):
             ID=email, CODE=code, TYPE=type, MSG=msg, SEND_TIMESTAMP=time.time()*1000)
         return json_response({"success": True, "log": "success"})
 
-
+@csrf_exempt
 def verifyEmailCode(request):
     """
     函数名：verifyEmailCode
@@ -71,8 +72,8 @@ def verifyEmailCode(request):
         return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱验证码解密
-    email = aesDecrypt(email)
-    vcode = aesDecrypt(vcode)
+    email = base64AesDecrypt(email)
+    vcode = base64AesDecrypt(vcode)
 
     query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
     if query.exists():
@@ -100,7 +101,7 @@ def verifyEmailCode(request):
     else:
         return json_response({"success": False, "log": "email_not_find"})
 
-
+@csrf_exempt
 def accountRegistration(request):
     """
     函数名：accountRegistration
@@ -119,7 +120,7 @@ def accountRegistration(request):
         return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
-    email = aesDecrypt(email)
+    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
@@ -139,7 +140,7 @@ def accountRegistration(request):
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
 
-
+@csrf_exempt
 def accountCancellation(request):
     """
     函数名：accountCancellation
@@ -158,7 +159,7 @@ def accountCancellation(request):
         return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
-    email = aesDecrypt(email)
+    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
@@ -178,7 +179,7 @@ def accountCancellation(request):
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
 
-
+@csrf_exempt
 def updateUserEmail(request):
     """
     函数名：updateUserEmail
@@ -197,7 +198,7 @@ def updateUserEmail(request):
         return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
-    email = aesDecrypt(email)
+    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
@@ -217,7 +218,7 @@ def updateUserEmail(request):
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
 
-
+@csrf_exempt
 def forgetPassword(request):
     """
     函数名：forgetPassword
@@ -236,7 +237,7 @@ def forgetPassword(request):
         return json_response({"success": False, "log": "request_is_not_post"})
 
     # 邮箱解密
-    email = aesDecrypt(email)
+    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
@@ -257,7 +258,7 @@ def forgetPassword(request):
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
 
-
+@csrf_exempt
 def json_response(answer):
     print(answer)
     return HttpResponse(json.dumps(answer, ensure_ascii=False))
