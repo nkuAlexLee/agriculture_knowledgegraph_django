@@ -5,11 +5,13 @@ from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 from django.views.decorators.csrf import csrf_exempt
 from agriculture_knowledgegraph_django.utils import base64AesDecrypt, codeEncrypt, sendEmailAgri
+from datetime import date
 import json
 import time
 import random
 
 # 锦满
+
 
 @csrf_exempt
 def sendEmailVerification(request):
@@ -27,7 +29,7 @@ def sendEmailVerification(request):
         email = request.POST.get('email')
         type = request.POST.get('type')
         msg = request.POST.get('msg')
-        print("注册邮箱号：",base64AesDecrypt(email))
+        print("注册邮箱号：", base64AesDecrypt(email))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
 
@@ -36,6 +38,20 @@ def sendEmailVerification(request):
 
     # 邮箱解密
     email = base64AesDecrypt(email)
+
+    # 根据tupe发送请求
+    if type == 0:
+        # 注册邮箱
+        accountRegistration(request)
+    elif type == 1:
+        # 注销邮箱
+        accountCancellation(request)
+    elif type == 2:
+        # 忘记密码
+        forgetPassword(request)
+    else:
+        # 更新邮箱
+        updateUserEmail(request)
 
     # 写入邮箱验证码表
     # 若不存在该邮箱，则在邮箱验证码表写入入参信息
@@ -53,6 +69,7 @@ def sendEmailVerification(request):
             ID=email, CODE=code, TYPE=type, MSG=msg, SEND_TIMESTAMP=time.time()*1000)
         return json_response({"success": True, "log": "success"})
 
+
 @csrf_exempt
 def verifyEmailCode(request):
     """
@@ -68,6 +85,7 @@ def verifyEmailCode(request):
     if request.method == "POST":
         email = request.POST.get('email')
         vcode = request.POST.get('vcode')
+        msg = request.POST.get('msg')
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
 
@@ -79,27 +97,34 @@ def verifyEmailCode(request):
     if query.exists():
         # 已存在该邮箱
         if time.time() * 1000 - query.first().SEND_TIMESTAMP <= 60 * 5 * 1000:
-            # 超过5分钟
             if query.first().TYPE == 0:
-                # 注册邮箱
-                accountRegistration(request)
-                return json_response({"success": True, "log": "success"})
+                # 未超过5分钟
+                SYS_USER.objects.create(
+                    ID=111111111,
+                    LOGIN_NAME="xxx",
+                    PASSWORD="123456",
+                    USER_TYPE=1,
+                    SEX=1,
+                    BORN_TIME=date.today,
+                    CREATE_TIME=date.today,
+                    ERROR_COUNT=0,
+                    STATUS=0,
+                    LOCK_TIME=0,
+                    OCCUPATION="xxx",
+                    EMAIL=email,
+                    AVATAR="xxx"
+                )
             elif query.first().TYPE == 1:
-                # 注销邮箱
-                accountCancellation(request)
-                return json_response({"success": True, "log": "success"})
+                SYS_USER.objects.filter(EMAIL=email).delete()
             elif query.first().TYPE == 2:
-                # 忘记密码
-                forgetPassword(request)
-                return json_response({"success": True, "log": "success"})
+                SYS_USER.objects.filter(EMAIL=email).update(PASSWORD=msg)
             else:
-                # 更新邮箱
-                updateUserEmail(request)
-                return json_response({"success": True, "log": "success"})
+                SYS_USER.objects.filter(EMAIL=email).update(EMAIL=msg)
         else:
             return json_response({"success": False, "log": "exceed_5_minutes"})
     else:
         return json_response({"success": False, "log": "email_not_find"})
+
 
 @csrf_exempt
 def accountRegistration(request):
@@ -140,6 +165,7 @@ def accountRegistration(request):
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
 
+
 @csrf_exempt
 def accountCancellation(request):
     """
@@ -178,6 +204,7 @@ def accountCancellation(request):
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
+
 
 @csrf_exempt
 def updateUserEmail(request):
@@ -218,6 +245,7 @@ def updateUserEmail(request):
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
 
+
 @csrf_exempt
 def forgetPassword(request):
     """
@@ -257,6 +285,7 @@ def forgetPassword(request):
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_find"})
+
 
 @csrf_exempt
 def json_response(answer):
