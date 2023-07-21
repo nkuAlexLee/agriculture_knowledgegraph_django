@@ -11,8 +11,6 @@ import json
 import time
 import random
 
-# 锦满
-
 
 @csrf_exempt
 def sendEmailVerification(request):
@@ -49,7 +47,8 @@ def sendEmailVerification(request):
     if query.exists():
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
-                     SEND_TIMESTAMP=time.time()*1000)
+                    SEND_TIMESTAMP=time.time()*1000)
+
     else:
         # 不存在该邮箱
         SYS_EMAIL_CODE.objects.create(

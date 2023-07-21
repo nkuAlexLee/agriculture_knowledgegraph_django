@@ -1,4 +1,60 @@
 <!DOCTYPE html>
+<<<<<<< HEAD
+	<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>发送数据到 Django 后端</title>
+		<style>
+			#log {
+				border: 1px solid black;
+				padding: 10px;
+				margin-top: 10px;
+				height: 200px;
+				overflow-y: scroll;
+			}
+			#log p {
+				margin: 0;
+				padding: 0;
+			}
+			</style>
+		<script src="XMLConnector.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<script>
+			function sendData() {
+				let test_msg = [['id','100000002'],['token','byHLY5uJZsftGpdT'],['type','12'],['msg','new']];
+				console.log(test_msg);
+				let xmlcon = new XMLConnector('http://127.0.0.1:8000/userFeedback/', 'POST', test_msg, result, wating, timeout);
+				xmlcon.send();
+			}
+			function timeout(){
+				console.log("超时");
+			}
+			function wating(iswait){
+				if(iswait){
+					console.log("开始等待");
+				}else{
+					console.log("等待结束")
+				}
+			}
+			function result(msg){
+				$('#log').append('<p>' + msg + '</p>');
+				console.log(msg);
+			}
+			$(document).ready(function() {
+				$('#sendButton').click(function() {
+					$('#log').append('<p>' + "正在发送"+ '</p>');
+					sendData();
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>发送数据到 Django 后端</h1>
+			<input type="text" id="inputText"></input>
+			<button id="sendButton">发送</button>
+		<div id="log"></div>
+	</body>
+=======
 <html>
     <head>
         <meta charset="UTF-8" />
@@ -66,4 +122,5 @@
         <button id="sendButton">发送</button>
         <div id="log"></div>
     </body>
+>>>>>>> 8d90d1206b85cbfe7f0ad5980eb6ef8033bd86b9
 </html>

@@ -152,10 +152,15 @@ def codeEncrypt(code: str, email: str):
 
 
 if "__name__" == "__main__":
-    code = "123456"
-    to_email = "2112794@mail.nankai.edu.cn"
-    link = codeEncrypt(code, to_email)
-    success = sendEmailAgri("2112794@mail.nankai.edu.cn", link, 1)
-    print(success)  # True
-    success = sendEmailAgri("211sadcadad2794@mail.nankai.edu.cn", link, 1)
-    print(success)  # False
+
+# code = "123456"
+# to_email = "2112794@mail.nankai.edu.cn"
+# link = codeEncrypt(code, to_email)
+# success = sendEmailAgri("2112794@mail.nankai.edu.cn", link, 1)
+
+
+# print(success)  # True
+# success = sendEmailAgri("211sadcadad2794@mail.nankai.edu.cn", link, 1)
+# print(success)  # False
+
+
