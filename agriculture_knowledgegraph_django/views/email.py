@@ -4,20 +4,11 @@ from django.http import HttpResponse
 from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, \
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 from django.views.decorators.csrf import csrf_exempt
-<<<<<<< HEAD
 from agriculture_knowledgegraph_django.utils import aesDecrypt, codeEncrypt, sendEmailAgri
-=======
-from utils import aesDecrypt, codeEncrypt, sendEmailAgri
->>>>>>> 37ba60c2aeaca10928a6c22af0e9f5371189481e
 import json
 import time
 import random
 
-<<<<<<< HEAD
-# 锦满
-
-=======
->>>>>>> 37ba60c2aeaca10928a6c22af0e9f5371189481e
 
 def sendEmailVerification(request):
     """
@@ -48,11 +39,7 @@ def sendEmailVerification(request):
     if query.exists():
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
-<<<<<<< HEAD
-                     SEND_TIMESTAMP=time.time()*1000)
-=======
                     SEND_TIMESTAMP=time.time()*1000)
->>>>>>> 37ba60c2aeaca10928a6c22af0e9f5371189481e
         return {"success": True, "log": "F0001"}
     else:
         # 不存在该邮箱
@@ -233,10 +220,6 @@ def forgetPassword(request):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-<<<<<<< HEAD
-
-=======
->>>>>>> 37ba60c2aeaca10928a6c22af0e9f5371189481e
     query = SYS_EMAIL_CODE.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
