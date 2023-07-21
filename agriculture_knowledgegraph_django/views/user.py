@@ -43,7 +43,7 @@ def login(request):
             user_token.save()
             data = {
                 'id': user.ID,
-                'token': token,
+                'token': aesEncrypt(token),
                 'internal_access':True,
             }
             userMessage = json.loads(getUserMessage(data).content)
@@ -94,12 +94,12 @@ def getUserRealNameMessage(request):
     try:
         if request['internal_access']==True:
             id = request['id']
-            token = request['token']
+            token =  aesDecrypt(request['token'])
     except:
     #获取ID和token
         if request.method == "POST":
             id = request.POST.get('id')
-            token = request.POST.get('token')
+            token =  aesDecrypt(request.POST.get('token'))
         else:
             return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
     
@@ -113,10 +113,10 @@ def getUserRealNameMessage(request):
     try:
         user_name = SYS_USER_NAME.objects.get(ID=user_token.ID)
         user_info = {
-            "name": user_name.NAME,
-            "tel": user_name.TEL,
-            "card_type": user_name.CARD_TYPE,
-            "id_card": user_name.IDCARD
+            "name": aesEncrypt(user_name.NAME),
+            "tel": aesEncrypt(user_name.TEL),
+            "card_type": aesEncrypt(user_name.CARD_TYPE),
+            "id_card": aesEncrypt(user_name.IDCARD),
         }
         return json_response({"success": True, "content": user_info, "log": "succeed_to_get_User_real_name_message"})
     except SYS_USER_NAME.DoesNotExist:
@@ -137,12 +137,12 @@ def getUserMessage(request):
     try:
         if request['internal_access']==True:
             id = request['id']
-            token = request['token']
+            token = aesDecrypt(request['token'])
     except:
     #获取ID和token
         if request.method == "POST":
             id = request.POST.get('id')
-            token = request.POST.get('token')
+            token = aesDecrypt(request.POST.get('token'))
         else:
             return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
     
@@ -184,7 +184,7 @@ def updateAcountInformation(request):
     # 获取ID、token和更新的信息
     if request.method == "POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
         sex = request.POST.get('sex')
         occupation = request.POST.get('occupation')
         born_time = request.POST.get('born_time')
@@ -218,9 +218,9 @@ def updateUserPassword(request):
     if request.method == "POST":
         login = request.POST.get('login')
         is_id = request.POST.get('is_id')
-        old_password = request.POST.get('old_password')
-        new_password = request.POST.get('new_password')
-        token = request.POST.get('token')
+        old_password = aesDecrypt(request.POST.get('old_password'))
+        new_password = aesDecrypt(request.POST.get('new_password'))
+        token = aesDecrypt(request.POST.get('token'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
@@ -270,11 +270,11 @@ def updateUserRealNameMessage(request):
     # 获取ID、token和更新的实名信息    
     if request.method == "POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
-        name = request.POST.get('name')
-        tel = request.POST.get('tel')
-        card_type = request.POST.get('card_type')
-        id_card = request.POST.get('id_card')
+        token = aesDecrypt(request.POST.get('token'))
+        name = aesDecrypt(request.POST.get('name'))
+        tel = aesDecrypt(request.POST.get('tel'))
+        card_type =aesDecrypt( request.POST.get('card_type'))
+        id_card = aesDecrypt(request.POST.get('id_card'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
@@ -306,7 +306,7 @@ def deleteUserRealNameMessage(request):
     """
     if request.method == "POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
@@ -340,7 +340,7 @@ def userFeedback(request):
     # 获取ID、token、类型、文字信息和图片
     if(request.method=="POST"):
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
         type = request.POST.get('type')
         msg = request.POST.get('msg')
         img_0 = request.POST.get('img_0')
@@ -380,7 +380,7 @@ def avatarSubmission(request):
     # 获取ID、token和头像
     if request.method=="POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
         avatar = request.POST.get('avatar')
     else:
         print(request.method)
@@ -425,7 +425,7 @@ def updateUserIP(request):
     # 获取ID和token
     if request.method=="POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
     else:
         print(request.method)
         return json_response({"success": False, "log": "fail_to_connect_server"})
