@@ -6,7 +6,7 @@ import json
 import secrets
 import string
 from django.views.decorators.csrf import csrf_exempt
-import agriculture_knowledgegraph_django.utils
+from agriculture_knowledgegraph_django.utils import aesDecrypt,aesEncrypt
 #水木
 @csrf_exempt
 def login(request):
@@ -23,7 +23,7 @@ def login(request):
     if request.method == "POST":
         login = request.POST.get('login')
         is_id = request.POST.get('is_id')
-        password = request.POST.get('password')
+        password = aesDecrypt(request.POST.get('password'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 

@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, \
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 from django.views.decorators.csrf import csrf_exempt
-from utils import aesDecrypt, codeEncrypt, sendEmailAgri
+from agriculture_knowledgegraph_django.utils import aesDecrypt, codeEncrypt, sendEmailAgri
 import json
 import time
 import random
