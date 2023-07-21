@@ -386,7 +386,7 @@ def avatarSubmission(request):
     if request.method=="POST":
         id = request.POST.get('id')
         token = aesDecrypt(request.POST.get('token'))
-        avatar = request.POST.get('avatar')
+        avatar = sqlite3.Binary(request.POST.get('avatar'))
     else:
         print(request.method)
         return json_response({"success": False, "log": "fail_to_connect_server"})
