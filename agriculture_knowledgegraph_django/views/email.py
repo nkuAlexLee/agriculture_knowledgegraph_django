@@ -97,28 +97,24 @@ def verifyEmailCode(request):
     if query.exists():
         # 已存在该邮箱
         if time.time() * 1000 - float(query.first().SEND_TIMESTAMP) <= 60 * 5 * 1000:
-            if query.first().TYPE == 0:
-
-                id = SYS_USER.objects.aggregate(Max('ID'))+1
+            if int(query.first().TYPE) == 0:
+                id = int(SYS_USER.objects.aggregate(Max('ID'))['ID__max'])+1
+                password="hahahahaha"
                 # 未超过5分钟
                 SYS_USER.objects.create(
                     ID=id,
                     LOGIN_NAME="xxx",
-                    PASSWORD="123456",
+                    PASSWORD=password,
                     USER_TYPE=1,
-                    SEX=1,
-                    BORN_TIME=date.today,
-                    CREATE_TIME=date.today,
                     ERROR_COUNT=0,
+                    CREATE_TIME=str(int(time.time()*1000)),
                     STATUS=0,
-                    LOCK_TIME=0,
-                    OCCUPATION="xxx",
-                    EMAIL=email,
-                    AVATAR="xxx"
+                    EMAIL=str(email),
                 )
-            elif query.first().TYPE == 1:
+                print('现在是幻想时间')
+            elif int(query.first().TYPE) == 1:
                 SYS_USER.objects.filter(EMAIL=email).delete()
-            elif query.first().TYPE == 2:
+            elif int(query.first().TYPE) == 2:
                 SYS_USER.objects.filter(EMAIL=email).update(PASSWORD=msg)
             else:
                 SYS_USER.objects.filter(EMAIL=email).update(EMAIL=msg)
