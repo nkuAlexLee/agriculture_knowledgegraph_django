@@ -24,15 +24,20 @@ def login(request):
         login = request.POST.get('login')
         is_id = request.POST.get('is_id')
         password = base64AesDecrypt(request.POST.get('password'))
+        print(login,is_id,password)
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
     # 更新随机token
     # 验证ID、密码和token
     try:
+        if is_id=="true":
+            is_id=True
+        else:
+            is_id=False
+
         if is_id:
             user = SYS_USER.objects.get(ID=login)
-            
         else:
             user = SYS_USER.objects.get(EMAIL=login)
         
@@ -226,6 +231,10 @@ def updateUserPassword(request):
 
     # 验证邮箱/ID、旧密码和token
     try:
+        if is_id=="true":
+            is_id=True
+        else:
+            is_id=False
         if is_id:
             user = SYS_USER.objects.get(ID=login)
             
