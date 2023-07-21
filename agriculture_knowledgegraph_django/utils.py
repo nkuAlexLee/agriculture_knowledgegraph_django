@@ -137,19 +137,6 @@ def codeEncrypt(code:str, email:str):
     send_dict = base64Encode(send_dict)
     link = f"http://localhost:8080/#/verify/{send_dict}"
     return link
-
-<<<<<<< HEAD
-
-# code = "123456"
-# to_email = "2112794@mail.nankai.edu.cn"
-# link = codeEncrypt(code, to_email)
-# success = sendEmailAgri("2112794@mail.nankai.edu.cn", link, 1)
-
-
-# print(success)  # True
-# success = sendEmailAgri("211sadcadad2794@mail.nankai.edu.cn", link, 1)
-# print(success)  # False
-=======
 if "__name__"=="__main__":
     code = "123456"
     to_email = "2112794@mail.nankai.edu.cn"
@@ -158,4 +145,3 @@ if "__name__"=="__main__":
     print(success) # True
     success = sendEmailAgri("211sadcadad2794@mail.nankai.edu.cn", link, 1)
     print(success) # False
->>>>>>> 8d90d1206b85cbfe7f0ad5980eb6ef8033bd86b9
