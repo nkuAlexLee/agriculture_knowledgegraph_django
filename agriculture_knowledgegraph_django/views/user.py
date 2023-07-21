@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
-from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
+from agriculture_knowledgegraph_django_model.models import SYS_USER,SYS_USER_IP,SYS_USER_FEEDBACK,SYS_USER_NAME,SYS_LOG,SYS_USER_TOKEN,SYS_EMAIL_CODE
 import json
 import secrets
 import string
 from django.views.decorators.csrf import csrf_exempt
-from agriculture_knowledgegraph_django.utils import aesDecrypt, codeEncrypt
+from agriculture_knowledgegraph_django.utils import aesDecrypt, codeEncrypt,aesEncrypt
+#水木
 import time
 import sqlite3
 # 水木
@@ -27,9 +28,8 @@ def login(request):
     if request.method == "POST":
         login = request.POST.get('login')
         is_id = request.POST.get('is_id')
-        password = request.POST.get('password')
+        password = aesDecrypt(request.POST.get('password'))
     else:
-    # 获取邮箱/ID、密码和token
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
     # 更新随机token
@@ -37,35 +37,32 @@ def login(request):
     try:
         if is_id:
             user = SYS_USER.objects.get(ID=login)
-
+            
         else:
             user = SYS_USER.objects.get(EMAIL=login)
-
+        
         if user.PASSWORD == password:
             success = True
-            token = ''.join(secrets.choice(
-                string.ascii_letters + string.digits) for _ in range(16))
+            token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
             user_token = SYS_USER_TOKEN(ID=user.ID, TOKEN=token)
             user_token.save()
             data = {
                 'id': user.ID,
-                'token': token,
-                'internal_access': True,
+                'token': aesEncrypt(token),
+                'internal_access':True,
             }
             userMessage = json.loads(getUserMessage(data).content)
-            userRealNameMessage = json.loads(
-                getUserRealNameMessage(data).content)
+            userRealNameMessage= json.loads(getUserRealNameMessage(data).content)
 
             # # 输出解码后的信息
             # print(userMessage,userRealNameMessage)
-            content = {**userMessage["content"],
-                       **userRealNameMessage["content"]}
+            content = {**userMessage["content"], **userRealNameMessage["content"]} 
             # content=''
             log = "succeed_to_login"
             return json_response({
                 'success': success,
                 'content': content,
-                'token': token,
+                'token':token,
                 'log': log,
             })
 
@@ -87,8 +84,6 @@ def login(request):
         'content': content,
         'log': log,
     })
-
-
 @csrf_exempt
 def getUserRealNameMessage(request):
     """
@@ -102,14 +97,14 @@ def getUserRealNameMessage(request):
         log: 日志信息
     """
     try:
-        if request['internal_access'] == True:
+        if request['internal_access']==True:
             id = request['id']
-            token = request['token']
+            token =  aesDecrypt(request['token'])
     except:
-        # 获取ID和token
+    #获取ID和token
         if request.method == "POST":
             id = request.POST.get('id')
-            token = request.POST.get('token')
+            token =  aesDecrypt(request.POST.get('token'))
         else:
             return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
     
@@ -123,10 +118,10 @@ def getUserRealNameMessage(request):
     try:
         user_name = SYS_USER_NAME.objects.get(ID=user_token.ID)
         user_info = {
-            "name": user_name.NAME,
-            "tel": user_name.TEL,
-            "card_type": user_name.CARD_TYPE,
-            "id_card": user_name.IDCARD
+            "name": aesEncrypt(user_name.NAME),
+            "tel": aesEncrypt(user_name.TEL),
+            "card_type": aesEncrypt(user_name.CARD_TYPE),
+            "id_card": aesEncrypt(user_name.IDCARD),
         }
         return json_response({"success": True, "content": user_info, "log": "succeed_to_get_User_real_name_message"})
     except SYS_USER_NAME.DoesNotExist:
@@ -145,14 +140,14 @@ def getUserMessage(request):
     """
     # 获取ID和token
     try:
-        if request['internal_access'] == True:
+        if request['internal_access']==True:
             id = request['id']
-            token = request['token']
+            token = aesDecrypt(request['token'])
     except:
-        # 获取ID和token
+    #获取ID和token
         if request.method == "POST":
             id = request.POST.get('id')
-            token = request.POST.get('token')
+            token = aesDecrypt(request.POST.get('token'))
         else:
             return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
     
@@ -194,7 +189,7 @@ def updateAcountInformation(request):
     # 获取ID、token和更新的信息
     if request.method == "POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
         sex = request.POST.get('sex')
         occupation = request.POST.get('occupation')
         born_time = request.POST.get('born_time')
@@ -213,8 +208,6 @@ def updateAcountInformation(request):
     user.BORN_TIME = born_time
     user.save()
     return json_response({"success": True, "content": {}, "log": "update-account-information-success"})
-
-
 @csrf_exempt
 def updateUserPassword(request):
     """
@@ -230,9 +223,9 @@ def updateUserPassword(request):
     if request.method == "POST":
         login = request.POST.get('login')
         is_id = request.POST.get('is_id')
-        old_password = request.POST.get('old_password')
-        new_password = request.POST.get('new_password')
-        token = request.POST.get('token')
+        old_password = aesDecrypt(request.POST.get('old_password'))
+        new_password = aesDecrypt(request.POST.get('new_password'))
+        token = aesDecrypt(request.POST.get('token'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
@@ -240,17 +233,17 @@ def updateUserPassword(request):
     try:
         if is_id:
             user = SYS_USER.objects.get(ID=login)
-
+            
         else:
             user = SYS_USER.objects.get(EMAIL=login)
-
+        
         try:
             user_token = SYS_USER_TOKEN.objects.get(ID=user.ID, TOKEN=token)
         except SYS_USER_TOKEN.DoesNotExist:
             return json_response({"success": False, "content": {}, "log": "invalid_id_or_token"})
         
         if user.PASSWORD == old_password:
-            user.PASSWORD = new_password
+            user.PASSWORD=new_password
             user.save()
             success = True
             content = None
@@ -268,8 +261,6 @@ def updateUserPassword(request):
     # 更新密码
     # 返回参数log
     return json_response({"success": success, "content": content, "log": log})
-
-
 @csrf_exempt
 def updateUserRealNameMessage(request):
     """
@@ -281,14 +272,14 @@ def updateUserRealNameMessage(request):
         success: 是否验证成功
         log: 日志信息
     """
-    # 获取ID、token和更新的实名信息
+    # 获取ID、token和更新的实名信息    
     if request.method == "POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
-        name = request.POST.get('name')
-        tel = request.POST.get('tel')
-        card_type = request.POST.get('card_type')
-        id_card = request.POST.get('id_card')
+        token = aesDecrypt(request.POST.get('token'))
+        name = aesDecrypt(request.POST.get('name'))
+        tel = aesDecrypt(request.POST.get('tel'))
+        card_type =aesDecrypt( request.POST.get('card_type'))
+        id_card = aesDecrypt(request.POST.get('id_card'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
@@ -301,14 +292,12 @@ def updateUserRealNameMessage(request):
     
     # 更新用户基础信息
     user = SYS_USER_NAME.objects.get(ID=id)
-    user.NAME = name
+    user.NAME= name
     user.TEL = tel
-    user.CARD_TYPE = card_type
-    user.IDCARD = id_card
+    user.CARD_TYPE=card_type
+    user.IDCARD=id_card
     user.save()
     return json_response({"success": True, "content": {}, "log": "update-account-information-success"})
-
-
 @csrf_exempt
 def deleteUserRealNameMessage(request):
     """
@@ -322,7 +311,7 @@ def deleteUserRealNameMessage(request):
     """
     if request.method == "POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
     else:
         return json_response({"success": False, "content":{},"log": "fail_to_connect_server"})
 
@@ -340,8 +329,6 @@ def deleteUserRealNameMessage(request):
 
     # 删除用户实名信息
     # 返回参数log
-
-# ShmilAyu
 
 
 #ShmilAyu
@@ -398,7 +385,7 @@ def avatarSubmission(request):
     # 获取ID、token和头像
     if request.method=="POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
         avatar = request.POST.get('avatar')
     else:
         print(request.method)
@@ -443,7 +430,7 @@ def updateUserIP(request):
     # 获取ID和token
     if request.method=="POST":
         id = request.POST.get('id')
-        token = request.POST.get('token')
+        token = aesDecrypt(request.POST.get('token'))
     else:
         print(request.method)
         return json_response({"success": False, "log": "fail_to_connect_server"})
@@ -468,3 +455,4 @@ def updateUserIP(request):
 def json_response(answer):
     print(answer)
     return HttpResponse(json.dumps(answer, ensure_ascii=False))
+
