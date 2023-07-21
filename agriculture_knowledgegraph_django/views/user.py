@@ -6,8 +6,13 @@ import json
 import secrets
 import string
 from django.views.decorators.csrf import csrf_exempt
-from agriculture_knowledgegraph_django.utils import aesDecrypt,aesEncrypt
+from agriculture_knowledgegraph_django.utils import aesDecrypt, codeEncrypt,aesEncrypt
 #水木
+import time
+import sqlite3
+# 水木
+
+
 @csrf_exempt
 def login(request):
     """
@@ -340,13 +345,13 @@ def userFeedback(request):
     # 获取ID、token、类型、文字信息和图片
     if(request.method=="POST"):
         id = request.POST.get('id')
-        token = aesDecrypt(request.POST.get('token'))
+        token = request.POST.get('token')
         type = request.POST.get('type')
         msg = request.POST.get('msg')
-        img_0 = request.POST.get('img_0')
-        img_1 = request.POST.get('img_1')
-        img_2 = request.POST.get('img_2')
-        img_3 = request.POST.get('img_3')
+        img_0 = sqlite3.Binary(request.POST.get('img_0'))
+        img_1 = sqlite3.Binary(request.POST.get('img_1'))
+        img_2 = sqlite3.Binary(request.POST.get('img_2'))
+        img_3 = sqlite3.Binary(request.POST.get('img_3'))
     else:
         return json_response({"success": False, "log": "fail_to_connect_server"})
     # 提交用户反馈意见或bug

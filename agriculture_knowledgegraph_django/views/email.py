@@ -11,8 +11,6 @@ import json
 import time
 import random
 
-# 锦满
-
 
 @csrf_exempt
 def sendEmailVerification(request):
@@ -49,7 +47,12 @@ def sendEmailVerification(request):
     if query.exists():
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
+<<<<<<< HEAD
+                    SEND_TIMESTAMP=time.time()*1000)
+        return {"success": True, "log": "F0001"}
+=======
                      SEND_TIMESTAMP=time.time()*1000)
+>>>>>>> 8d90d1206b85cbfe7f0ad5980eb6ef8033bd86b9
     else:
         # 不存在该邮箱
         SYS_EMAIL_CODE.objects.create(
@@ -234,8 +237,12 @@ def forgetPassword(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
+<<<<<<< HEAD
+    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+=======
 
     query = SYS_USER.objects.filter(ID=email)
+>>>>>>> 8d90d1206b85cbfe7f0ad5980eb6ef8033bd86b9
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
