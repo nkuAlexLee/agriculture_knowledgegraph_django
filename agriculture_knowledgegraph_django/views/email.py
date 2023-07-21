@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from agriculture_knowledgegraph_django_model.models import SYS_USER, SYS_USER_IP, SYS_USER_FEEDBACK, SYS_USER_NAME, \
     SYS_LOG, SYS_USER_TOKEN, SYS_EMAIL_CODE
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Max
 from agriculture_knowledgegraph_django.utils import base64AesDecrypt, codeEncrypt, sendEmailAgri
 from datetime import date
 import json
@@ -39,35 +40,34 @@ def sendEmailVerification(request):
     # 邮箱解密
     email = base64AesDecrypt(email)
 
-    # 根据tupe发送请求
-    if type == 0:
-        # 注册邮箱
-        accountRegistration(request)
-    elif type == 1:
-        # 注销邮箱
-        accountCancellation(request)
-    elif type == 2:
-        # 忘记密码
-        forgetPassword(request)
-    else:
-        # 更新邮箱
-        updateUserEmail(request)
-
     # 写入邮箱验证码表
     # 若不存在该邮箱，则在邮箱验证码表写入入参信息
     # 若已存在该邮箱，则用入参信息更新邮箱验证码表
     # 返回参数log按照子接口log返回信息
+
     query = SYS_EMAIL_CODE.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
                      SEND_TIMESTAMP=time.time()*1000)
-        return json_response({"success": True, "log": "request_is_not_post"})
     else:
         # 不存在该邮箱
         SYS_EMAIL_CODE.objects.create(
             ID=email, CODE=code, TYPE=type, MSG=msg, SEND_TIMESTAMP=time.time()*1000)
-        return json_response({"success": True, "log": "success"})
+
+    # 根据tupe发送请求
+    if type == 0:
+        # 注册邮箱
+        return accountRegistration(email, code)
+    elif type == 1:
+        # 注销邮箱
+        return accountCancellation(email, code)
+    elif type == 2:
+        # 忘记密码
+        return forgetPassword(email, code)
+    else:
+        # 更新邮箱
+        return updateUserEmail(email, code)
 
 
 @csrf_exempt
@@ -98,9 +98,11 @@ def verifyEmailCode(request):
         # 已存在该邮箱
         if time.time() * 1000 - query.first().SEND_TIMESTAMP <= 60 * 5 * 1000:
             if query.first().TYPE == 0:
+
+                id = SYS_USER.objects.aggregate(Max('ID'))+1
                 # 未超过5分钟
                 SYS_USER.objects.create(
-                    ID=111111111,
+                    ID=id,
                     LOGIN_NAME="xxx",
                     PASSWORD="123456",
                     USER_TYPE=1,
@@ -127,7 +129,7 @@ def verifyEmailCode(request):
 
 
 @csrf_exempt
-def accountRegistration(request):
+def accountRegistration(email, code):
     """
     函数名：accountRegistration
     功能：向邮箱发送注册链接
@@ -138,36 +140,25 @@ def accountRegistration(request):
         vcode: 验证码
         log: 日志信息
     """
-    # 获取邮箱
-    if request.method == "POST":
-        email = request.POST.get('email')
-    else:
-        return json_response({"success": False, "log": "request_is_not_post"})
-
-    # 邮箱解密
-    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
-        code = query.first().CODE
+        return json_response({"success": False, "log": "email_already_exist"})
+    else:
         link = codeEncrypt(code, email)
         success = sendEmailAgri(email, link, 0)
         if success:
             # 发送成功
-            return json_response({"success": True, "vcode": code, "log": "success"})
+            return json_response({"success": True, "log": "success"})
         else:
-            # 发送失败
-            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
-    else:
-        # 不存在该邮箱
-        return json_response({"success": False, "log": "email_not_find"})
+            return json_response({"success": False, "log": "fail_to_connect_server"})
 
 
 @csrf_exempt
-def accountCancellation(request):
+def accountCancellation(email, code):
     """
     函数名：accountCancellation
     功能：向邮箱发送注销链接
@@ -178,36 +169,27 @@ def accountCancellation(request):
         vcode: 验证码
         log: 日志信息
     """
-    # 获取邮箱
-    if request.method == "POST":
-        email = request.POST.get('email')
-    else:
-        return json_response({"success": False, "log": "request_is_not_post"})
-
-    # 邮箱解密
-    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
-        code = query.first().CODE
         link = codeEncrypt(code, email)
         success = sendEmailAgri(email, link, 1)
         if success:
             # 发送成功
-            return json_response({"success": True, "vcode": code, "log": "success"})
+            return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
+            return json_response({"success": False,  "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return json_response({"success": False, "log": "email_not_find"})
+        return json_response({"success": False, "log": "email_not_exist"})
 
 
 @csrf_exempt
-def updateUserEmail(request):
+def updateUserEmail(email, code):
     """
     函数名：updateUserEmail
     功能：向邮箱发送更新邮箱链接
@@ -218,36 +200,27 @@ def updateUserEmail(request):
         vcode: 验证码
         log: 日志信息
     """
-    # 获取邮箱
-    if request.method == "POST":
-        email = request.POST.get('email')
-    else:
-        return json_response({"success": False, "log": "request_is_not_post"})
-
-    # 邮箱解密
-    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
-        code = query.first().CODE
         link = codeEncrypt(code, email)
         success = sendEmailAgri(email, link, 3)
         if success:
             # 发送成功
-            return json_response({"success": True, "vcode": code, "log": "success"})
+            return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return json_response({"success": False, "log": "email_not_find"})
+        return json_response({"success": False, "log": "email_not_exist"})
 
 
 @csrf_exempt
-def forgetPassword(request):
+def forgetPassword(email, code):
     """
     函数名：forgetPassword
     功能：向邮箱发送忘记密码链接
@@ -258,33 +231,24 @@ def forgetPassword(request):
         vcode: 验证码
         log: 日志信息
     """
-    # 获取邮箱
-    if request.method == "POST":
-        email = request.POST.get('email')
-    else:
-        return json_response({"success": False, "log": "request_is_not_post"})
-
-    # 邮箱解密
-    email = base64AesDecrypt(email)
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
 
-    query = SYS_EMAIL_CODE.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
-        code = query.first().CODE
         link = codeEncrypt(code, email)
         success = sendEmailAgri(email, link, 2)
         if success:
             # 发送成功
-            return json_response({"success": True, "vcode": code, "log": "success"})
+            return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "vcode": code, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "fail_to_connect_server"})
     else:
         # 不存在该邮箱
-        return json_response({"success": False, "log": "email_not_find"})
+        return json_response({"success": False, "log": "email_not_exist"})
 
 
 @csrf_exempt
