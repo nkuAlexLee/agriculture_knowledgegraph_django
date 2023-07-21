@@ -7,7 +7,7 @@ class SYS_USER(models.Model):
     USER_TYPE = models.IntegerField()
     SEX = models.IntegerField(null=True)
     BORN_TIME = models.DateField(null=True)
-    CREATE_TIME = models.IntegerField()
+    CREATE_TIME = models.CharField(max_length=20)
     ERROR_COUNT = models.IntegerField()
     STATUS = models.IntegerField()
     LOCK_TIME = models.IntegerField(null=True)
@@ -24,7 +24,7 @@ class SYS_USER_IP(models.Model):
 
 class SYS_USER_FEEDBACK(models.Model):
     ID =  models.IntegerField(primary_key=True)
-    CREATE_TIME = models.IntegerField()
+    CREATE_TIME = models.CharField(max_length=20)
     TYPE = models.CharField(max_length=10)
     MSG = models.TextField()
     IMG_0 = models.BinaryField(null=True)
@@ -56,4 +56,4 @@ class SYS_EMAIL_CODE(models.Model):
     CODE = models.IntegerField()
     TYPE = models.CharField(max_length=10)
     MSG=models.CharField(max_length=100,null=True)
-    SEND_TIMESTAMP = models.CharField(max_length=10)
+    SEND_TIMESTAMP = models.CharField(max_length=20)

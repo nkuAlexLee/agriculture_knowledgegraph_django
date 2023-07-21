@@ -43,6 +43,7 @@ def aesDecrypt(data:str, key=key):
     :param data: 加密后的数据（密文）
     :return:明文
     '''
+    print(data)
     key = key.encode('utf8')
     data = base64.b64decode(data)
     cipher = AES.new(key, AES.MODE_ECB)
@@ -53,6 +54,13 @@ def aesDecrypt(data:str, key=key):
     # print(text_decrypted)
     return text_decrypted
 
+def base64AesEncrypt(data:str, key=key):
+    return base64Encode(aesEncrypt(data, key))
+
+def base64AesDecrypt(data:str, key=key):
+    print(data)
+    data = base64Decode(data)
+    return aesDecrypt(data, key)
 
 def base64Encode(str:str):
     return base64.b64encode(str.encode()).decode()
