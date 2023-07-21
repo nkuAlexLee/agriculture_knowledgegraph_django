@@ -67,7 +67,7 @@ def login(request):
             }
             userMessage = json.loads(getUserMessage(data).content)
             userRealNameMessage = json.loads(getUserRealNameMessage(data).content)
-            sitecontent = getUserIP(request)
+            # sitecontent = getUserIP(request)
             # # 输出解码后的信息
             # print(userMessage,userRealNameMessage)
             content = {**userMessage["content"], **userRealNameMessage["content"]}
@@ -77,9 +77,9 @@ def login(request):
                 {
                     "success": success,
                     "content": content,
-                    "token": base64AesEncrypt(token),
+                    "token": token,
                     "log": log,
-                    "site":sitecontent,
+                    # "site":sitecontent,
                 }
             )
 
@@ -197,6 +197,7 @@ def getUserMessage(request):
     try:
         user_name = SYS_USER.objects.get(ID=user_token.ID)
         user_info = {
+            "id":id,
             "login_name": user_name.LOGIN_NAME,
             "user_type": user_name.USER_TYPE,
             "sex": user_name.SEX,
@@ -506,11 +507,11 @@ def getUserIP(request):
     else:
         ip = request.META.get("REMOTE_ADDR")  # 未使用代理获取IP
     url = "http://ip.taobao.com/service/getIpInfo.php?ip="+str(ip)
-    response = requests.get(url)
-    if int(response.text["code"])==0:
-        city=response.text["data"]["city"]
+    response =json.loads(requests.get(url).text)
+    if response["code"]==0:
+        city=response["data"]["city"]
     else:
-        city="位置"
+        city="未知"
     res={"ip":ip,"city":city}
     return res
 
