@@ -15,7 +15,7 @@ import json
 import secrets
 import string
 from django.views.decorators.csrf import csrf_exempt
-from agriculture_knowledgegraph_django.utils import base64AesDecrypt, base64AesEncrypt
+from agriculture_knowledgegraph_django.utils import base64AesDecrypt, base64AesEncrypt,base64Decode
 import requests
 import base64
 
@@ -210,7 +210,7 @@ def getUserMessage(request):
             "lock_time": user_name.LOCK_TIME,
             "occupation": user_name.OCCUPATION,
             "email": user_name.EMAIL,
-            "avatar":blob_to_base64(base64AesDecrypt(user_name.AVATAR)),
+            "avatar":blob_to_base64(user_name.AVATAR),
         }
         # write_string_to_file(blob_to_base64(user_name.AVATAR), "output2.txt")
         return json_response({"success": True, "content": user_info, "log": "success"})
@@ -535,7 +535,7 @@ def avatarSubmission(request):
         token = base64AesDecrypt(request.POST.get('token'))
         # print("token1:",request.POST.get('token'))
         # print("token2:",token)
-        base64Avatar = request.POST.get('avatar')
+        base64Avatar =base64Decode(request.POST.get('avatar'))
     else:
         print(request.method)
         return json_response({"success": False, "log": "fail_to_connect_server"})
