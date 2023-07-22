@@ -412,6 +412,7 @@ def deleteUserRealNameMessage(request):
 
 # ShmilAyu
 # X-Forwarded-For:简称XFF头，它代表客户端，也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。
+@csrf_exempt
 def getUserIP(request):
     """获取请求者的IP信息"""
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")  # 判断是否使用代理
@@ -433,7 +434,7 @@ def getUserIP(request):
     res={"ip":ip,"city":city}
     return res
 
-
+@csrf_exempt
 def updateUserIP(request):
     """
     函数名：updateUserIP
@@ -472,6 +473,7 @@ def updateUserIP(request):
         return json_response({"success": False, "log": "fail_to_connect_server"})
 
 #ShmilAyu
+@csrf_exempt
 def userFeedback(request):
     """
     函数名：userFeedback
@@ -511,7 +513,7 @@ def userFeedback(request):
     except SYS_USER_FEEDBACK.DoesNotExist:
         # print("提交失败")
         return json_response({"success": False, "log": "fail_to_connect_server"})
-
+@csrf_exempt
 def avatarSubmission(request):
     """
     函数名：avatarSubmission
@@ -525,7 +527,10 @@ def avatarSubmission(request):
     # 获取ID、token和头像
     if request.method=="POST":
         id = request.POST.get('id')
+        print("id:",id)
         token = base64AesDecrypt(request.POST.get('token'))
+        print("token1:",request.POST.get('token'))
+        print("token2:",token)
         base64Avatar = request.POST.get('avatar')
     else:
         print(request.method)
@@ -546,7 +551,7 @@ def avatarSubmission(request):
     except SYS_USER.DoesNotExist:
         # print("提交失败")
         return json_response({"success": False, "log": "fail_to_connect_server"})
-    
+@csrf_exempt
 def data_uri_to_blob(data_uri):
     # Extract base64 string from data URI
     _, base64_string = data_uri.split(",", 1)
@@ -554,7 +559,7 @@ def data_uri_to_blob(data_uri):
     # Decode the base64-encoded string to bytes
     blob_data = base64.b64decode(base64_string)
     return blob_data
-
+@csrf_exempt
 def updateUserIP(request):
     """
     函数名：updateUserIP
