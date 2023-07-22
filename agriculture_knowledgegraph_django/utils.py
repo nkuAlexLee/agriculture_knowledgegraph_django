@@ -48,15 +48,16 @@ def aesDecrypt(data: str, key=key):
     :param data: 加密后的数据（密文）
     :return:明文
     '''
-    print(data)
-    key = key.encode('utf8')
-    data = base64.b64decode(data)
-    cipher = AES.new(key, AES.MODE_ECB)
+    try:
+        key = key.encode('utf8')
+        data = base64.b64decode(data)
+        cipher = AES.new(key, AES.MODE_ECB)
 
-    # 去补位
-    text_decrypted = unpad(cipher.decrypt(data))
-    text_decrypted = text_decrypted.decode('utf8')
-    # print(text_decrypted)
+        # 去补位
+        text_decrypted = unpad(cipher.decrypt(data))
+        text_decrypted = text_decrypted.decode('utf8')
+    except:
+        text_decrypted = False
     return text_decrypted
 
 
@@ -65,17 +66,24 @@ def base64AesEncrypt(data: str, key=key):
 
 
 def base64AesDecrypt(data: str, key=key):
-    print(data)
     data = base64Decode(data)
+    if data is False:
+        return False
     return aesDecrypt(data, key)
 
 
 def base64Encode(str: str):
-    return base64.b64encode(str.encode()).decode()
+    try:
+        return base64.b64encode(str.encode()).decode()
+    except:
+        return False
 
 
 def base64Decode(str: str):
-    return base64.b64decode(str.encode()).decode()
+    try:
+        return base64.b64decode(str.encode()).decode()
+    except:
+        return False
 
 
 def sendEmail(email_addr: str, content: dict, type: str):
