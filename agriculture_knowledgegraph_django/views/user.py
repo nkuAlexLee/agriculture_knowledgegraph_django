@@ -79,7 +79,7 @@ def login(request):
                 {
                     "success": success,
                     "content": content,
-                    "token": token,
+                    "token": base64AesEncrypt(token),
                     "log": log,
                     "site":sitecontent,
                 }
@@ -210,8 +210,9 @@ def getUserMessage(request):
             "lock_time": user_name.LOCK_TIME,
             "occupation": user_name.OCCUPATION,
             "email": user_name.EMAIL,
-            "avatar":blob_to_base64(user_name.AVATAR),
+            "avatar":blob_to_base64(base64AesDecrypt(user_name.AVATAR)),
         }
+        # write_string_to_file(blob_to_base64(user_name.AVATAR), "output2.txt")
         return json_response({"success": True, "content": user_info, "log": "success"})
     except SYS_USER.DoesNotExist:
         return json_response({"success": False, "content": {}, "log": "ID_not_exist"})
@@ -412,26 +413,29 @@ def deleteUserRealNameMessage(request):
 
 # ShmilAyu
 # X-Forwarded-For:简称XFF头，它代表客户端，也就是HTTP的请求端真实的IP，只有在通过了HTTP 代理或者负载均衡服务器时才会添加该项。
-@csrf_exempt
+
 def getUserIP(request):
-    """获取请求者的IP信息"""
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")  # 判断是否使用代理
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(",")[0]  # 使用代理获取真实的ip
-    else:
-        ip = request.META.get("REMOTE_ADDR")  # 未使用代理获取IP
-    url = "https://api.vvhan.com/api/getIpInfo?ip="+str(ip)
-    response =requests.get(url)
-    if response.status_code==200:
-        content=json.loads(response.content)
-        # print(content)
-        if content["success"]==True:
-            city=content["info"]["city"]
+    try:
+        """获取请求者的IP信息"""
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")  # 判断是否使用代理
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]  # 使用代理获取真实的ip
+        else:
+            ip = request.META.get("REMOTE_ADDR")  # 未使用代理获取IP
+        url = "https://api.vvhan.com/api/getIpInfo?ip="+str(ip)
+        response =requests.get(url)
+        if response.status_code==200:
+            content=json.loads(response.content)
+            # print(content)
+            if content["success"]==True:
+                city=content["info"]["city"]
+            else:
+                city="未知"
         else:
             city="未知"
-    else:
-        city="未知"
-    res={"ip":ip,"city":city}
+        res={"ip":ip,"city":city}
+    except:
+        res={"ip":"127.0.0.1","city":"未知"}
     return res
 
 @csrf_exempt
@@ -527,10 +531,10 @@ def avatarSubmission(request):
     # 获取ID、token和头像
     if request.method=="POST":
         id = request.POST.get('id')
-        print("id:",id)
+        # print("id:",id)
         token = base64AesDecrypt(request.POST.get('token'))
-        print("token1:",request.POST.get('token'))
-        print("token2:",token)
+        # print("token1:",request.POST.get('token'))
+        # print("token2:",token)
         base64Avatar = request.POST.get('avatar')
     else:
         print(request.method)
@@ -602,9 +606,20 @@ def blob_to_base64(blob_data):
     base64_data = base64.b64encode(blob_data)
     # Convert bytes to a UTF-8 string (optional)
     base64_str = "data:image/png;base64,"+base64_data.decode('utf-8')
+    # print('blob_data:',blob_data[0:50])
+    # print('base64_data:',base64_data[0:50])
+    # print('blob_data:',base64_str[0:50])
+    # write_string_to_file(base64_str, "output.txt")
     return base64_str
 
+def write_string_to_file(text, file_path):
+    try:
+        with open(file_path, 'w') as file:
+            file.write(text)
+        print("字符串成功写入文件！")
+    except Exception as e:
+        print(f"写入文件时发生错误：{e}")
 
 def json_response(answer):
-    print(answer)
+    # print(answer)
     return HttpResponse(json.dumps(answer, ensure_ascii=False))
