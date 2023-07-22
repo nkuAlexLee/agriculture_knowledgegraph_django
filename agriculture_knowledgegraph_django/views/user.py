@@ -17,6 +17,7 @@ import string
 from django.views.decorators.csrf import csrf_exempt
 from agriculture_knowledgegraph_django.utils import base64AesDecrypt, base64AesEncrypt
 import requests
+import base64
 
 # 水木
 @csrf_exempt
@@ -209,7 +210,7 @@ def getUserMessage(request):
             "lock_time": user_name.LOCK_TIME,
             "occupation": user_name.OCCUPATION,
             "email": user_name.EMAIL,
-            "avatar": user_name.AVATAR,
+            "avatar":blob_to_base64(user_name.AVATAR),
         }
         return json_response({"success": True, "content": user_info, "log": "success"})
     except SYS_USER.DoesNotExist:
@@ -581,6 +582,14 @@ def updateUserIP(request):
         # print("提交失败")
         return json_response({"success": False, "log": "fail_to_connect_server"})
 
+def blob_to_base64(blob_data):
+    if blob_data==None:
+        return None
+    # Encode the binary blob data to base64
+    base64_data = base64.b64encode(blob_data)
+    # Convert bytes to a UTF-8 string (optional)
+    base64_str = base64_data.decode('utf-8')
+    return base64_str
 
 def json_response(answer):
     print(answer)
