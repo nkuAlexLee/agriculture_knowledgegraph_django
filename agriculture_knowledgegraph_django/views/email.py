@@ -29,8 +29,8 @@ def sendEmailVerification(request):
     if request.method == "POST":
         email = request.POST.get('email')
         type = int(request.POST.get('type'))
-        msg = request.POST.get('msg')
-        print("注册邮箱号：", base64AesDecrypt(email))
+        msg = base64AesDecrypt(request.POST.get('msg'))
+        print("加密邮箱号：", email)
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
 
@@ -39,18 +39,17 @@ def sendEmailVerification(request):
 
     # 邮箱解密
     email = base64AesDecrypt(email)
-
+    print("解码邮箱号：",email)
     # 写入邮箱验证码表
     # 若不存在该邮箱，则在邮箱验证码表写入入参信息
     # 若已存在该邮箱，则用入参信息更新邮箱验证码表
     # 返回参数log按照子接口log返回信息
-
     query = SYS_EMAIL_CODE.objects.filter(ID=email)
     if query.exists():
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
                     SEND_TIMESTAMP=time.time()*1000)
-
+        print("成功发送",email,code)
     else:
         # 不存在该邮箱
         SYS_EMAIL_CODE.objects.create(
@@ -86,7 +85,8 @@ def verifyEmailCode(request):
     if request.method == "POST":
         email = request.POST.get('email')
         vcode = request.POST.get('vcode')
-        msg = request.POST.get('msg')
+        
+        print("看这个",email,vcode)
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
 
@@ -95,6 +95,8 @@ def verifyEmailCode(request):
     vcode = base64AesDecrypt(vcode)
 
     query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
+    msg = query.first().MSG
+    print(msg)
     if query.exists():
         # 已存在该邮箱
         if time.time() * 1000 - float(query.first().SEND_TIMESTAMP) <= 60 * 5 * 1000:
