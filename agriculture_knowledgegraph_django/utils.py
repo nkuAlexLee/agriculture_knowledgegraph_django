@@ -26,14 +26,17 @@ def aesEncrypt(data:str, key=key):
     :param data:被加密字符串（明文）
     :return:密文
     '''
-    key = key.encode('utf8')
-    # 字符串补位
-    data = pad(data)
-    cipher = AES.new(key, AES.MODE_ECB)
-    # 加密后得到的是bytes类型的数据，使用Base64进行编码,返回byte字符串
-    result = cipher.encrypt(data.encode())
-    encodestrs = base64.b64encode(result)
-    enctext = encodestrs.decode('utf8')
+    try:
+        key = key.encode('utf8')
+        # 字符串补位
+        data = pad(data)
+        cipher = AES.new(key, AES.MODE_ECB)
+        # 加密后得到的是bytes类型的数据，使用Base64进行编码,返回byte字符串
+        result = cipher.encrypt(data.encode())
+        encodestrs = base64.b64encode(result)
+        enctext = encodestrs.decode('utf8')
+    except:
+        enctext = False
     return enctext
 
 
