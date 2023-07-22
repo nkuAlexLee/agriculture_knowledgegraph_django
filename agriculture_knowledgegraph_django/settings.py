@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'agriculture_knowledgegraph_django_model', 
+    'agriculture_knowledgegraph_django_model',
     'corsheaders',
 ]
 

@@ -26,7 +26,7 @@ def sendEmailVerification(request):
     # 获取邮箱、类型和附加信息
     if request.method == "POST":
         email = request.POST.get('email')
-        type = request.POST.get('type')
+        type = int(request.POST.get('type'))
         msg = request.POST.get('msg')
         print("注册邮箱号：", base64AesDecrypt(email))
     else:
@@ -47,12 +47,8 @@ def sendEmailVerification(request):
     if query.exists():
         # 已存在该邮箱
         query.update(CODE=code, TYPE=type, MSG=msg,
-<<<<<<< HEAD
                     SEND_TIMESTAMP=time.time()*1000)
-        return {"success": True, "log": "F0001"}
-=======
-                     SEND_TIMESTAMP=time.time()*1000)
->>>>>>> 8d90d1206b85cbfe7f0ad5980eb6ef8033bd86b9
+
     else:
         # 不存在该邮箱
         SYS_EMAIL_CODE.objects.create(
@@ -99,32 +95,39 @@ def verifyEmailCode(request):
     query = SYS_EMAIL_CODE.objects.filter(ID=email, CODE=vcode)
     if query.exists():
         # 已存在该邮箱
-        if time.time() * 1000 - query.first().SEND_TIMESTAMP <= 60 * 5 * 1000:
-            if query.first().TYPE == 0:
+        if time.time() * 1000 - float(query.first().SEND_TIMESTAMP) <= 60 * 5 * 1000:
+            if int(query.first().TYPE) == 0:
+                user_query = SYS_USER.objects.filter(EMAIL=email)
+                if user_query.exists():
+                    return json_response({"success": False, "log": "email_already_exist"})
+                else:
+                    if SYS_USER.objects.exists():
+                        id = int(SYS_USER.objects.aggregate(
+                            Max('ID'))['ID__max'])+1
+                    else:
+                        id = 100000001
+                    password = base64AesDecrypt(SYS_EMAIL_CODE.objects.filter(
+                        ID=email).first().MSG)
+                    # 未超过5分钟
+                    SYS_USER.objects.create(
+                        ID=id,
+                        LOGIN_NAME="xxx",
+                        PASSWORD=password,
+                        USER_TYPE=1,
+                        ERROR_COUNT=0,
+                        CREATE_TIME=str(int(time.time()*1000)),
+                        STATUS=0,
+                        EMAIL=str(email),
 
-                id = SYS_USER.objects.aggregate(Max('ID'))+1
-                # 未超过5分钟
-                SYS_USER.objects.create(
-                    ID=id,
-                    LOGIN_NAME="xxx",
-                    PASSWORD="123456",
-                    USER_TYPE=1,
-                    SEX=1,
-                    BORN_TIME=date.today,
-                    CREATE_TIME=date.today,
-                    ERROR_COUNT=0,
-                    STATUS=0,
-                    LOCK_TIME=0,
-                    OCCUPATION="xxx",
-                    EMAIL=email,
-                    AVATAR="xxx"
-                )
-            elif query.first().TYPE == 1:
+                    )
+            elif int(query.first().TYPE) == 1:
                 SYS_USER.objects.filter(EMAIL=email).delete()
-            elif query.first().TYPE == 2:
+            elif int(query.first().TYPE) == 2:
                 SYS_USER.objects.filter(EMAIL=email).update(PASSWORD=msg)
             else:
                 SYS_USER.objects.filter(EMAIL=email).update(EMAIL=msg)
+
+            return json_response({"success": True, "log": "success"})
         else:
             return json_response({"success": False, "log": "exceed_5_minutes"})
     else:
@@ -146,7 +149,7 @@ def accountRegistration(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         return json_response({"success": False, "log": "email_already_exist"})
@@ -157,7 +160,7 @@ def accountRegistration(email, code):
             # 发送成功
             return json_response({"success": True, "log": "success"})
         else:
-            return json_response({"success": False, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "mailbox_not_exist"})
 
 
 @csrf_exempt
@@ -175,7 +178,7 @@ def accountCancellation(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
@@ -185,7 +188,7 @@ def accountCancellation(email, code):
             return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False,  "log": "fail_to_connect_server"})
+            return json_response({"success": False,  "log": "mailbox_not_exist"})
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_exist"})
@@ -206,7 +209,7 @@ def updateUserEmail(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-    query = SYS_USER.objects.filter(ID=email)
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
@@ -216,7 +219,7 @@ def updateUserEmail(email, code):
             return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "mailbox_not_exist"})
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_exist"})
@@ -237,12 +240,8 @@ def forgetPassword(email, code):
 
     # 发送包含验证信息的网页链接到邮箱
     # 返回参数log按照子接口log返回信息
-<<<<<<< HEAD
-    query = SYS_EMAIL_CODE.objects.filter(ID=email)
-=======
 
-    query = SYS_USER.objects.filter(ID=email)
->>>>>>> 8d90d1206b85cbfe7f0ad5980eb6ef8033bd86b9
+    query = SYS_USER.objects.filter(EMAIL=email)
     if query.exists():
         # 已存在该邮箱
         link = codeEncrypt(code, email)
@@ -252,7 +251,7 @@ def forgetPassword(email, code):
             return json_response({"success": True, "log": "success"})
         else:
             # 发送失败
-            return json_response({"success": False, "log": "fail_to_connect_server"})
+            return json_response({"success": False, "log": "mailbox_not_exist"})
     else:
         # 不存在该邮箱
         return json_response({"success": False, "log": "email_not_exist"})
