@@ -423,7 +423,7 @@ def getUserIP(request):
     response =requests.get(url)
     if response.status_code==200:
         content=json.loads(response.content)
-        print(content)
+        # print(content)
         if content["success"]==True:
             city=content["info"]["city"]
         else:
@@ -526,7 +526,7 @@ def avatarSubmission(request):
     if request.method=="POST":
         id = request.POST.get('id')
         token = base64AesDecrypt(request.POST.get('token'))
-        avatar = sqlite3.Binary(request.POST.get('avatar'))
+        base64Avatar = request.POST.get('avatar')
     else:
         print(request.method)
         return json_response({"success": False, "log": "fail_to_connect_server"})
@@ -539,13 +539,21 @@ def avatarSubmission(request):
         return json_response({"success": False, "content": {}, "log": "invalid_id_or_token"})
     try:
         feedback = SYS_USER.objects.get(ID=id)
-        feedback.AVATAR=avatar
+        feedback.AVATAR=data_uri_to_blob(base64Avatar)
         feedback.save()
         return json_response({"success": True, "log": "success"})
 
     except SYS_USER.DoesNotExist:
         # print("提交失败")
         return json_response({"success": False, "log": "fail_to_connect_server"})
+    
+def data_uri_to_blob(data_uri):
+    # Extract base64 string from data URI
+    _, base64_string = data_uri.split(",", 1)
+
+    # Decode the base64-encoded string to bytes
+    blob_data = base64.b64decode(base64_string)
+    return blob_data
 
 def updateUserIP(request):
     """
@@ -588,8 +596,9 @@ def blob_to_base64(blob_data):
     # Encode the binary blob data to base64
     base64_data = base64.b64encode(blob_data)
     # Convert bytes to a UTF-8 string (optional)
-    base64_str = base64_data.decode('utf-8')
+    base64_str = "data:image/png;base64,"+base64_data.decode('utf-8')
     return base64_str
+
 
 def json_response(answer):
     print(answer)
