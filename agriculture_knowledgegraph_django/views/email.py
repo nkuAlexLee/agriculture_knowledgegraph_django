@@ -110,8 +110,7 @@ def verifyEmailCode(request):
                             Max('ID'))['ID__max'])+1
                     else:
                         id = 100000001
-                    password = base64AesDecrypt(SYS_EMAIL_CODE.objects.filter(
-                        ID=email).first().MSG)
+                    password = SYS_EMAIL_CODE.objects.filter(ID=email).first().MSG
                     # 未超过5分钟
                     SYS_USER.objects.create(
                         ID=id,

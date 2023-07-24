@@ -76,6 +76,7 @@ def sendEmail(email_addr:str, content:dict, type:str):
     print(email_addr)
     # verify = verify_email(email_addr)
     verify=True
+    print(content)
     # 检查验证值是否为True
     if verify:
         sender = {
