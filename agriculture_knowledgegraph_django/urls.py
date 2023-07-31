@@ -26,6 +26,7 @@ from agriculture_knowledgegraph_django.views.user import (
     getUserRealNameMessage,
     updateUserRealNameMessage,
     deleteUserRealNameMessage,
+    updateAccountInformation,
 )
 from agriculture_knowledgegraph_django.views.email import (
     forgetPassword,
@@ -52,7 +53,7 @@ urlpatterns = [
     path('forgetPassword/', forgetPassword, name='forget_password'),
     path('login/', login, name='login'),
     path('getUserMessage/', getUserMessage, name='get_user_message'),
-    path('updateAccountInformation/', getUserMessage, name='update_account_information'),
+    path('updateAccountInformation/', updateAccountInformation, name='update_account_information'),
     path('updateUserPassword/', updateUserPassword, name='update_user_password'),
     path('updateUserIP/', updateUserIP, name='update_user_ip'),
     path('userFeedback/', userFeedback, name='user_feedback'),

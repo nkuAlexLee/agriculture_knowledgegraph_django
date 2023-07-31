@@ -219,7 +219,7 @@ def getUserMessage(request):
 
 
 @csrf_exempt
-def updateAcountInformation(request):
+def updateAccountInformation(request):
     """
     函数名：updateAcountInformation
     功能：更新用户基础信息
