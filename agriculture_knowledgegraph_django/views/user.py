@@ -233,6 +233,7 @@ def updateAcountInformation(request):
     if request.method == "POST":
         id = request.POST.get("id")
         token = base64AesDecrypt(request.POST.get("token"))
+        name = request.POST.get("name")
         sex = request.POST.get("sex")
         occupation = request.POST.get("occupation")
         born_time = request.POST.get("born_time")
@@ -250,6 +251,7 @@ def updateAcountInformation(request):
         )
     # 更新用户基础信息
     user = SYS_USER.objects.get(ID=id)
+    user.LOGIN_NAME=name
     user.SEX = sex
     user.OCCUPATION = occupation
     user.BORN_TIME = born_time
