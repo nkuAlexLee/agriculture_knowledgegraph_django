@@ -203,7 +203,7 @@ def getUserMessage(request):
             "login_name": user_name.LOGIN_NAME,
             "user_type": user_name.USER_TYPE,
             "sex": user_name.SEX,
-            "born_time": user_name.BORN_TIME,
+            "born_time": str(user_name.BORN_TIME),
             "create_time": user_name.CREATE_TIME,
             "error_count": user_name.ERROR_COUNT,
             "status": user_name.STATUS,
