@@ -251,7 +251,9 @@ def updateAccountInformation(request):
         )
     # 更新用户基础信息
     user = SYS_USER.objects.get(ID=id)
-    user.LOGIN_NAME=name
+    print(name)
+    if name:
+        user.LOGIN_NAME=name
     user.SEX = sex
     user.OCCUPATION = occupation
     user.BORN_TIME = born_time
