@@ -165,9 +165,8 @@ def search_node_nested_relationship(node_name, depth):
         return None
 
 
-    
-print(search_node_relationship('Laurence Fishburne'))
-    
+
+
 
 # 实体间直接关系查询
 def search_direct_relationship_between(start_node_name, end_node_name):
