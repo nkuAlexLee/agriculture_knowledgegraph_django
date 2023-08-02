@@ -8,8 +8,16 @@ graph = Graph("bolt://localhost:7687", auth=("neo4j", "12345678"))
 
 # 解析文本内容，获取需要的参数
 def parse(input_str):
+    """
+    解析文本内容，获取需要的参数
+
+    参数：
+    input_str: 输入的文本字符串
+
+    返回值：
+    如果匹配成功，返回元组 (a, b, friend, description, has_ai)，否则返回 None。
+    """
     # 正则表达式模式
-    
     pattern = r'\[\[([^]]+)\]\]--\[\[([^]]+)\]\]=([^=]+)={{([^{}]+)}}(=AI)?'
 
     # 使用正则表达式进行匹配
@@ -26,61 +34,153 @@ def parse(input_str):
     else:
         return None
 
-# input_str1 = "[[a]]--[[b]]=朋友={{连接关系|a不知道和b有啥关系，但是就是有关系}}=AI"
-# input_str2 = "[[a]]--[[b]]=朋友={{连接关系|a不知道和b有啥关系，但是就是有关系}}"
-# result1 = parse(input_str1)
-# result2 = parse(input_str2)
-# print(result1)
-# print(result2)
-
-
 # 创建实体节点的方法
-def create_entity(name, other_name, label, ency_content, map_content):
+def create_node(name, other_name, label, ency_content, map_content):
     """
-        name: 名称
-        orther_name: 别名
-        label: 标签名
-        ency_content: 实体描述或内容
-        map_content: 图信息（如果适用）
-        relationship_properties: 关系属性
+    创建节点
+
+    参数：
+    name: 名称
+    other_name: 别名
+    label: 标签名
+    ency_content: 实体描述或内容
+    map_content: 图信息（如果适用）
+
+    返回值：
+    成功保存节点到数据库，返回True，否则返回False
     """
-    # 创建实体节点
-    entity_node = Node(label, NAME=name, OTHER_NAME=other_name, LABEL=label, ENCY_CONTENT=ency_content, MAP_CONTENT=map_content)
+    # 创建节点
+    node = Node(label, NAME=name, OTHER_NAME=other_name, LABEL=label, ENCY_CONTENT=ency_content, MAP_CONTENT=map_content)
 
     try:
         # 保存节点到数据库
-        graph.create(entity_node)
+        graph.create(node)
         return True
-    except ClientError:
-        # 创建失败，返回False
+    except ClientError as e:
+        print(f"Error creating node: {e}")
         return False
-
 
 
 # 创建实体关系的方法
 def create_relationship(start_node_name, end_node_name, relationship_name, relationship_properties):
     """
-        relationship_name: 关系名
-        relationship_properties: 关系属性
+    创建节点之间的关系
+
+    参数：
+    start_node_name: 起始节点名称
+    end_node_name: 终止节点名称
+    relationship_name: 关系名
+    relationship_properties: 关系属性
+
+    返回值：
+    成功保存关系到数据库，返回True，否则返回False
     """
     start_node = graph.nodes.match(NAME=start_node_name).first()
     end_node = graph.nodes.match(NAME=end_node_name).first()
 
     if start_node is not None and end_node is not None:
-        # Create the relationship with properties
+        # 创建带有属性的关系
         relationship = Relationship(start_node, relationship_name, end_node, **relationship_properties)
 
         try:
             graph.create(relationship)
             return True
-        except ClientError:
+        except ClientError as e:
+            print(f"Error creating relationship: {e}")
             return False
     else:
         return False
 
 
+# 实体信息直接查询
+def search_node(node_name):
+    """
+    实体信息直接查询
+
+    参数：
+    node_name: 节点名称
+
+    返回值：
+    查询到的节点数据，如果没有找到则返回None
+    """
+    try:
+        query ="""
+            MATCH (node {name: $node_name})
+            RETURN node;
+         """
+        result = graph.run(query, node_name=node_name)
+        return result.data()
+
+    except ClientError as e:
+        print(f"Error searching node: {e}")
+        return None
+
+
+# 实体直接关系查询
+def search_node_relationship(node_name):
+    """
+    实体直接关系查询
+
+    参数：
+    node_name: 节点名称
+
+    返回值：
+    查询到的关系数据，如果没有找到则返回None
+    """
+    try:
+        query = """
+            MATCH (node {name: $node_name}) -[r]- (related)
+            RETURN related.name AS related_node_name, type(r) AS relationship_type;
+        """
+        result = graph.run(query, node_name=node_name)
+        return result.data()
+    except ClientError as e:
+        print(f"Error searching node relationship: {e}")
+        return None
+    
+
+    
+
+# 实体多层嵌套关系查询
+def search_node_nested_relationship(node_name, depth):
+    """
+    实体多层嵌套关系查询
+
+    参数：
+    node_name: 节点名称
+    depth: 查询深度
+
+    返回值：
+    查询到的嵌套关系数据，如果没有找到则返回None
+    """
+    try:
+        query = """
+            MATCH (node {name: $node_name})-[*..""" + str(depth) + """]-(related)
+            RETURN related.name AS related_node_name;
+        """
+        result = graph.run(query, node_name=node_name)
+        return [record['related_node_name'] for record in result if record['related_node_name']!=None]
+    except ClientError as e:
+        print(f"Error searching nested relationship: {e}")
+        return None
+
+
+    
+print(search_node_relationship('Laurence Fishburne'))
+    
+
 # 实体间直接关系查询
-def search_direct_relationship(start_node_name, end_node_name):
+def search_direct_relationship_between(start_node_name, end_node_name):
+    """
+    实体间直接关系查询
+
+    参数：
+    start_node_name: 起始节点名称
+    end_node_name: 终止节点名称
+
+    返回值：
+    查询到的关系数据，如果没有找到则返回None
+    """
     try:
         query ="""
             MATCH (startNode {name: $start_name}) -[r]- (endNode {name: $end_name})
@@ -88,13 +188,23 @@ def search_direct_relationship(start_node_name, end_node_name):
          """
         result = graph.run(query, start_name=start_node_name, end_name=end_node_name)
         return result.data()
-    except ClientError:
+    except ClientError as e:
+        print(f"Error searching direct relationship: {e}")
         return None
 
 
-
 # 实体间最短关系路径查询
-def search_indirect_relationship(start_node_name, end_node_name):
+def search_indirect_relationship_between(start_node_name, end_node_name):
+    """
+    实体间最短关系路径查询
+
+    参数：
+    start_node_name: 起始节点名称
+    end_node_name: 终止节点名称
+
+    返回值：
+    查询到的关系路径数据，如果没有找到则返回None
+    """
     try:
         query ="""
             MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
@@ -103,7 +213,8 @@ def search_indirect_relationship(start_node_name, end_node_name):
          """
         result = graph.run(query, start_name=start_node_name, end_name=end_node_name)
         return result.data()
-    except ClientError:
+    except ClientError as e:
+        print(f"Error searching indirect relationship: {e}")
         return None
 
 
@@ -114,7 +225,7 @@ def search_indirect_relationship(start_node_name, end_node_name):
 # ency_content = "..."
 # map_content = "..."
 
-# result = create_entity(person_name, other_name, label, ency_content, map_content)
+# result = create_node(person_name, other_name, label, ency_content, map_content)
 # print(result)
 
 
@@ -124,7 +235,7 @@ def search_indirect_relationship(start_node_name, end_node_name):
 # ency_content = "..."
 # map_content = "..."
 
-# result = create_entity(character_name, other_name, label, ency_content, map_content)
+# result = create_node(character_name, other_name, label, ency_content, map_content)
 # print(result)
 
 # person_name = "Hanser"
@@ -156,4 +267,4 @@ def search_indirect_relationship(start_node_name, end_node_name):
 # for node in column_data:
 #     # 循环调用函数
 #     name = node
-#     create_entity(name,[""],"待定","","")
+#     create_node(name, [""], "待定", "", "")
