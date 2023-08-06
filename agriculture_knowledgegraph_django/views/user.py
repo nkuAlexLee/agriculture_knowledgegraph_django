@@ -233,10 +233,10 @@ def updateAccountInformation(request):
     if request.method == "POST":
         id = request.POST.get("id")
         token = base64AesDecrypt(request.POST.get("token"))
+        name = request.POST.get("name")
         sex = request.POST.get("sex")
         occupation = request.POST.get("occupation")
         born_time = request.POST.get("born_time")
-        login_name =request.POST.get("login_name")
     else:
         return json_response(
             {"success": False, "content": {}, "log": "fail_to_connect_server"}
@@ -251,10 +251,12 @@ def updateAccountInformation(request):
         )
     # 更新用户基础信息
     user = SYS_USER.objects.get(ID=id)
+    print(name)
+    if name:
+        user.LOGIN_NAME=name
     user.SEX = sex
     user.OCCUPATION = occupation
     user.BORN_TIME = born_time
-    user.LOGIN_NAME =login_name
     user.save()
     return json_response(
         {"success": True, "content": {}, "log": "update-account-information-success"}
@@ -622,15 +624,6 @@ def write_string_to_file(text, file_path):
     except Exception as e:
         print(f"写入文件时发生错误：{e}")
 
-# from datetime import date
-# import json
- 
-# class DateEncoder(json.JSONEncoder):
-#     def default(self, obj):
-#         if isinstance(obj,date):
-#             return obj.strftime("%Y-%m-%d")
-#         else:
-#             return json.JSONEncoder.default(self,obj)
 def json_response(answer):
     # print(answer)
     return HttpResponse(json.dumps(answer, ensure_ascii=False))
