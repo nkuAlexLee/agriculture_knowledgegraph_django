@@ -2,7 +2,17 @@ from py2neo import Graph, Node, Relationship, ClientError
 from agriculture_knowledgegraph_django.utils import base64Decode, base64Encode
 import openpyxl
 import re
-import base64
+import sqlite3
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Max
+from datetime import date
+import json
+import time
+import random
+
 
 # 连接到Neo4j数据库
 graph = Graph("bolt://localhost:7687", auth=("neo4j", "12345678"))
@@ -38,75 +48,12 @@ def parse(input_str):
     else:
         return None
 
-# 创建实体节点的方法
-
-
-def create_node(name, other_name, label, ency_content, map_content):
-    """
-    创建节点
-
-    参数：
-    name: 名称
-    other_name: 别名
-    label: 标签名
-    ency_content: 实体描述或内容
-    map_content: 图信息（如果适用）
-
-    返回值：
-    成功保存节点到数据库，返回True，否则返回False
-    """
-    # 创建节点
-    node = Node(label, NAME=name, OTHER_NAME=other_name, LABEL=label,
-                ENCY_CONTENT=ency_content, MAP_CONTENT=map_content)
-
-    try:
-        # 保存节点到数据库
-        graph.create(node)
-        return True
-    except ClientError as e:
-        print(f"Error creating node: {e}")
-        return False
-
-
-# 创建实体关系的方法
-def create_relationship(start_node_name, end_node_name, relationship_name, relationship_properties):
-    """
-    创建节点之间的关系
-
-    参数：
-    start_node_name: 起始节点名称
-    end_node_name: 终止节点名称
-    relationship_name: 关系名
-    relationship_properties: 关系属性
-
-    返回值：
-    成功保存关系到数据库，返回True，否则返回False
-    """
-    start_node = graph.nodes.match(NAME=start_node_name).first()
-    end_node = graph.nodes.match(NAME=end_node_name).first()
-
-    if start_node is not None and end_node is not None:
-        # 创建带有属性的关系
-        relationship = Relationship(
-            start_node, relationship_name, end_node, **relationship_properties)
-
-        try:
-            graph.create(relationship)
-            return True
-        except ClientError as e:
-            print(f"Error creating relationship: {e}")
-            return False
-    else:
-        return False
-
 
 # 实体信息直接查询
-def search_node(search_name):
+@csrf_exempt
+def searchNode(request):
     """
     实体信息查询
-
-    参数：
-    search_name: 检索的名称
 
     方式:
     实体的查询根据NAME匹配>OTHER_NAME匹配>ENCY_CONTENT匹配
@@ -114,25 +61,33 @@ def search_node(search_name):
     返回值：
     查询到的节点数据，如果没有找到则返回空数组
     """
+    if request.method == 'POST':
+        search_name = request.POST.get('search_name')
+    else:
+        return json_response({'success': False, 'content': []})
+
     try:
         query = f"""
             MATCH (node)
-            WHERE node.name = '{search_name}' OR '{search_name}' IN node.OTHER_NAME OR '{search_name}' IN node.ENCY_CONTENT
+            WHERE node.name =~ '.*{search_name}.*' OR node.stockName =~ '.*{search_name}.*' OR node.resume =~ '.*{search_name}.*'
             RETURN node;
          """
         result = graph.run(query)
 
         nodes = result.data()
         nodes_list = []
+        index = 1
         for node in nodes:
             node_dict = {
+                "id": node['node'].identity,
                 "name": node["node"]["name"],
-                "abstract": node["node"]["ENCY_CONTENT"],
-                "index": 1
+                "abstract": node["node"]["resume"],
+                "index": index
             }
+            index = index + 1
             nodes_list.append(node_dict)
 
-        return nodes_list if nodes_list else []
+        return json_response({'success': True, 'content': nodes_list})
 
     except ClientError as e:
         print(f"Error searching node: {e}")
@@ -140,7 +95,8 @@ def search_node(search_name):
 
 
 # 单实体直接关系查询
-def search_node_relationship(node_name):
+@csrf_exempt
+def searchNodeRelationship(node_name):
     """
     实体直接关系查询
 
@@ -163,7 +119,8 @@ def search_node_relationship(node_name):
 
 
 # 单实体多层嵌套关系查询
-def search_node_nested_relationship(node_name, depth):
+@csrf_exempt
+def searchNodeNestedRelationship(node_name, depth):
     """
     实体多层嵌套关系查询
 
@@ -187,7 +144,8 @@ def search_node_nested_relationship(node_name, depth):
 
 
 # 实体间关系查询
-def search_relationship_between(start_node_name, end_node_name, method):
+@csrf_exempt
+def searchRelationshipBetween(start_node_name, end_node_name, method):
     """
     实体间关系查询
 
@@ -241,4 +199,10 @@ def search_relationship_between(start_node_name, end_node_name, method):
         return None
 
 
-print(search_relationship_between('Laurence Fishburne', 'Lana Wachowski', '1'))
+# print(searchRelationshipBetween('Laurence Fishburne', 'Lana Wachowski', '1'))
+
+
+@csrf_exempt
+def json_response(answer):
+    print(answer)
+    return HttpResponse(json.dumps(answer, ensure_ascii=False))
