@@ -70,7 +70,15 @@ def searchNode(request):
         query = f"""
             MATCH (node)
             WHERE node.name =~ '.*{search_name}.*' OR node.stockName =~ '.*{search_name}.*' OR node.resume =~ '.*{search_name}.*'
-            RETURN node;
+            RETURN node
+            ORDER BY
+            CASE
+                WHEN node.name = '{search_name}' THEN 1
+                WHEN node.name =~ '.*{search_name}.*' THEN 2
+                WHEN node.stockName =~ '.*{search_name}.*' THEN 3
+                WHEN node.resume =~ '.*{search_name}.*' THEN 4
+                ELSE 5
+            END;
          """
         result = graph.run(query)
 
@@ -80,14 +88,14 @@ def searchNode(request):
         for node in nodes:
             node_dict = {
                 "id": node['node'].identity,
-                "name": node["node"]["name"],
-                "abstract": node["node"]["resume"],
+                "name": base64Encode(str(node["node"]["name"]).replace(search_name, '<span style="color: #822296; font-weight: 600">'+search_name+'</span>')),
+                "abstract": base64Encode(str(node["node"]["resume"]).replace(search_name, '<span style="color: #822296; font-weight:600">'+search_name+'</span>')),
                 "index": index
             }
             index = index + 1
             nodes_list.append(node_dict)
 
-        return json_response({'success': True, 'content': nodes_list})
+        return json_response({'success': True, 'content': {'result': nodes_list}})
 
     except ClientError as e:
         print(f"Error searching node: {e}")
