@@ -36,7 +36,7 @@ def matchjson(text):
 @csrf_exempt
 def getGptAnswer(request):
     if request.method == "POST":
-        text = request.POST.get('history')
+        text = json.loads(request.POST.get('history'))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
     ans=getCqlGpt(text)
@@ -45,7 +45,7 @@ def getGptAnswer(request):
 def getCqlGpt(sentence,flag=0):
     if flag==3:
         print('回答失败')
-        return None
+        return "很抱歉没能理解您的问题，您可以切换方式提问，例如：某某公司有哪些高管，请问某高管的简历等"
     ques=sentence[-1]['content']
     try:
         messages = [{"role": "system","content": "你是一个知识图谱的问答机器人。\
