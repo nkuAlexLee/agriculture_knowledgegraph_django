@@ -15,7 +15,7 @@ import random
 
 
 # 连接到Neo4j数据库
-graph = Graph("bolt://localhost:7687", auth=("neo4j", "12345678"))
+graph = Graph("bolt://localhost:7687", auth=("neo4j", "xy639a58"))
 
 
 # 解析文本内容，获取需要的参数
