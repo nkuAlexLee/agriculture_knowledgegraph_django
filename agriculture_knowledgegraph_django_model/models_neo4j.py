@@ -1,5 +1,4 @@
 from py2neo import Graph, Node, Relationship, ClientError
-from agriculture_knowledgegraph_django.utils import base64Decode, base64Encode
 import openpyxl
 import re
 import base64
@@ -241,4 +240,89 @@ def search_relationship_between(start_node_name, end_node_name, method):
         return None
 
 
-print(search_relationship_between('Laurence Fishburne', 'Lana Wachowski', '1'))
+# print(search_relationship_between('Laurence Fishburne', 'Lana Wachowski', '1'))
+
+# ency_content存储
+str = """
+- 界面配置（没啥用了）
+ENTITY 必须要有ENTITY或者是RELATION
+= 
+- 实体对外展示内容（没啥用了）
+NAME=
+IMG=
+CONTENT=
+TITLE=
+- 实体界面信息"""
+"""
+data_list格式
+[
+    {
+        "title":"标题，默认都是二级标题，如果你不希望这段话有标题，就不需要这个字段，或者留空",
+        "level":"几级标题，int，2~6，虽然我觉得这个用不到（，用不到就不要这个字段就行，是不需要！！",
+        "content":"对应的文本,这个文本需要换行的话必须用<br>，分段落需要\n\n，要不然前端是无法换行（段落）的"
+    }
+]
+"""
+
+
+def encyInit(str, data_list, name):
+    temp = str
+    temp += "\n\n" + f"= {name} ="
+    for data in data_list:
+        if data.get("title") != None and data.get("title") != "":
+            if data.get("level") == None:
+                title = f"== {data.get('title')} =="
+            else:
+                title = "="
+                title = title * data.get("level")
+                title = title + " " + data.get('title') + " " + title
+            temp += "\n\n" + title
+        temp += "\n\n" + data.get("content")
+
+    return temp
+
+
+# 公司
+test = [
+    {
+        "title": "简介",
+        "content": "今天是个好天气"
+    },
+    {
+        "title": "历史",
+        "content": "今天是个好天气"
+    },
+    {
+        "title": "百度百科",
+        "content": "今天是个好天气"
+    },
+
+]
+
+# 人物
+test = [
+    {
+        "title": "简介",
+        "content": "今天是个好天气"
+    },
+
+]
+
+# 产品
+test = [
+    {
+        "title": "简介",
+        "content": "今天是个好天气"
+    },
+    {
+        "title": "历史",
+        "content": "今天是个好天气"
+    },
+    {
+        "title": "百度百科",
+        "content": "今天是个好天气"
+    },
+
+]
+
+print(encyInit(str, test))

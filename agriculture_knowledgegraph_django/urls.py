@@ -39,6 +39,7 @@ from agriculture_knowledgegraph_django.views.email import (
 
 from agriculture_knowledgegraph_django.views.neo4j import (
     searchNode,
+    recognizeNode,
 )
 
 
@@ -76,6 +77,7 @@ urlpatterns = [
     path('deleteUserRealNameMessage/', deleteUserRealNameMessage,
         name='delete_user_real_name_message'),
     path('testSendMessage/', testSendMessage, name='test_send_message'),
-    path('searchNode/', searchNode, name='search_node'),
+    path('searchNode/', searchNode, name='searchNode'),
+    path('recognizeNode/', recognizeNode, name='recognizeNode'),
     path("getGptAnswer/", getGptAnswer, name="get_gpt_answer")
 ]
