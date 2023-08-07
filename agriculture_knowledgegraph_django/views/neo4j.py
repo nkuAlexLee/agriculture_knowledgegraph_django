@@ -102,115 +102,143 @@ def searchNode(request):
         return None
 
 
-# 单实体直接关系查询
+
+# 实体识别接口
 @csrf_exempt
-def searchNodeRelationship(node_name):
-    """
-    实体直接关系查询
+def recognizeNode(request):
 
-    参数：
-    node_name: 节点名称
+    if request.method == 'POST':
+        text = request.POST.get('content')
+    else:
+        return json_response({'success': False, 'content': []})   
 
-    返回值：
-    查询到的关系数据，如果没有找到则返回None
-    """
-    try:
-        query = """
-            MATCH (node {name: $node_name}) -[r]- (related)
-            RETURN related.name AS related_node_name, type(r) AS relationship_type;
-        """
-        result = graph.run(query, node_name=node_name)
-        return result.data()
-    except ClientError as e:
-        print(f"Error searching node relationship: {e}")
-        return None
+    nodes = graph.run("MATCH (node) RETURN node.name AS node_name").data()
+    
+    # 用于跟踪已经替换过的节点名称及其替代文本
+    replaced_nodes = {}
 
+    for node in nodes:
+        node_name = node["node_name"]
+        
+        # 如果节点名称还没有替代文本，则执行替换
+        if node_name not in replaced_nodes:
+            tagged_node = "[[" + node_name + "]]"
+            text = text.replace(node_name, tagged_node)
+            
+            # 将节点名称及其替代文本添加到字典中
+            replaced_nodes[node_name] = node_name
 
-# 单实体多层嵌套关系查询
-@csrf_exempt
-def searchNodeNestedRelationship(node_name, depth):
-    """
-    实体多层嵌套关系查询
-
-    参数：
-    node_name: 节点名称
-    depth: 查询深度
-
-    返回值：
-    查询到的嵌套关系数据，如果没有找到则返回None
-    """
-    try:
-        query = """
-            MATCH (node {name: $node_name})-[*..""" + str(depth) + """]-(related)
-            RETURN related.name AS related_node_name;
-        """
-        result = graph.run(query, node_name=node_name)
-        return [record['related_node_name'] for record in result if record['related_node_name'] != None]
-    except ClientError as e:
-        print(f"Error searching nested relationship: {e}")
-        return None
+    return json_response({'success': True, 'content': base64Encode(text)})  
 
 
-# 实体间关系查询
-@csrf_exempt
-def searchRelationshipBetween(start_node_name, end_node_name, method):
-    """
-    实体间关系查询
 
-    参数：
-    start_node_name: 起始节点名称
-    end_node_name: 终止节点名称
-    method: 查询方式，"1"为最短关系，"2"为最长关系，"3"为最短的十条关系
+# # 单实体直接关系查询
+# @csrf_exempt
+# def searchNodeRelationship(node_name):
+#     """
+#     实体直接关系查询
 
-    返回值：
-    查询到的关系数据，如果没有找到则返回None
-    """
-    try:
-        if method == "1":
-            query = """
-                MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
-                MATCH path = shortestPath((startNode)-[*]-(endNode))
-                UNWIND relationships(path) AS r
-                RETURN r;
-            """
-        elif method == "2":
-            query = """
-                MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
-                MATCH path = (startNode)-[*]-(endNode)
-                UNWIND relationships(path) AS r
-                RETURN r ORDER BY length(path) DESC LIMIT 1;
-            """
-        elif method == "3":
-            query = """
-                MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
-                MATCH path = allShortestPath((startNode)-[*]-(endNode))
-                UNWIND relationships(path) AS r
-                RETURN r LIMIT 10;
-            """
-        else:
-            raise ValueError(
-                "Invalid method value. Supported values are '1', '2', and '3'.")
+#     参数：
+#     node_name: 节点名称
 
-        result = graph.run(query, start_name=start_node_name,
-                           end_name=end_node_name)
-        # 逐条打印返回的关系信息，按照指定格式输出
-        output_list = []
-        for record in result:
-            relationship_data = record['r']
-            output = f"[[{start_node_name}]]--[[{end_node_name}]]= {relationship_data['type']}={{ relationship_data['data'] }}"
-            output_list.append(output)
-
-        return output_list if output_list else []
-
-    except ClientError as e:
-        print(f"Error searching relationship: {e}")
-        return None
+#     返回值：
+#     查询到的关系数据，如果没有找到则返回None
+#     """
+#     try:
+#         query = """
+#             MATCH (node {name: $node_name}) -[r]- (related)
+#             RETURN related.name AS related_node_name, type(r) AS relationship_type;
+#         """
+#         result = graph.run(query, node_name=node_name)
+#         return result.data()
+#     except ClientError as e:
+#         print(f"Error searching node relationship: {e}")
+#         return None
 
 
-# print(searchRelationshipBetween('Laurence Fishburne', 'Lana Wachowski', '1'))
+# # 单实体多层嵌套关系查询
+# @csrf_exempt
+# def searchNodeNestedRelationship(node_name, depth):
+#     """
+#     实体多层嵌套关系查询
+
+#     参数：
+#     node_name: 节点名称
+#     depth: 查询深度
+
+#     返回值：
+#     查询到的嵌套关系数据，如果没有找到则返回None
+#     """
+#     try:
+#         query = """
+#             MATCH (node {name: $node_name})-[*..""" + str(depth) + """]-(related)
+#             RETURN related.name AS related_node_name;
+#         """
+#         result = graph.run(query, node_name=node_name)
+#         return [record['related_node_name'] for record in result if record['related_node_name'] != None]
+#     except ClientError as e:
+#         print(f"Error searching nested relationship: {e}")
+#         return None
+
+
+# # 实体间关系查询
+# @csrf_exempt
+# def searchRelationshipBetween(start_node_name, end_node_name, method):
+#     """
+#     实体间关系查询
+
+#     参数：
+#     start_node_name: 起始节点名称
+#     end_node_name: 终止节点名称
+#     method: 查询方式，"1"为最短关系，"2"为最长关系，"3"为最短的十条关系
+
+#     返回值：
+#     查询到的关系数据，如果没有找到则返回None
+#     """
+#     try:
+#         if method == "1":
+#             query = """
+#                 MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
+#                 MATCH path = shortestPath((startNode)-[*]-(endNode))
+#                 UNWIND relationships(path) AS r
+#                 RETURN r;
+#             """
+#         elif method == "2":
+#             query = """
+#                 MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
+#                 MATCH path = (startNode)-[*]-(endNode)
+#                 UNWIND relationships(path) AS r
+#                 RETURN r ORDER BY length(path) DESC LIMIT 1;
+#             """
+#         elif method == "3":
+#             query = """
+#                 MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
+#                 MATCH path = allShortestPath((startNode)-[*]-(endNode))
+#                 UNWIND relationships(path) AS r
+#                 RETURN r LIMIT 10;
+#             """
+#         else:
+#             raise ValueError(
+#                 "Invalid method value. Supported values are '1', '2', and '3'.")
+
+#         result = graph.run(query, start_name=start_node_name,
+#                            end_name=end_node_name)
+#         # 逐条打印返回的关系信息，按照指定格式输出
+#         output_list = []
+#         for record in result:
+#             relationship_data = record['r']
+#             output = f"[[{start_node_name}]]--[[{end_node_name}]]= {relationship_data['type']}={{ relationship_data['data'] }}"
+#             output_list.append(output)
+
+#         return output_list if output_list else []
+
+#     except ClientError as e:
+#         print(f"Error searching relationship: {e}")
+#         return None
 
 
 @csrf_exempt
 def json_response(answer):
     print(answer)
     return HttpResponse(json.dumps(answer, ensure_ascii=False))
+
