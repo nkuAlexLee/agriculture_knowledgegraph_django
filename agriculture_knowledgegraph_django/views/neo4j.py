@@ -88,8 +88,8 @@ def searchNode(request):
         for node in nodes:
             node_dict = {
                 "id": node['node'].identity,
-                "name": base64Encode(str(node["node"]["name"]).replace(search_name, '<span style="color: #822296">'+search_name+'</span>')),
-                "abstract": base64Encode(str(node["node"]["resume"]).replace(search_name, '<span style="color: #822296">'+search_name+'</span>')),
+                "name": base64Encode(str(node["node"]["name"]).replace(search_name, '<span style="color: #822296; font-weight: 600">'+search_name+'</span>')),
+                "abstract": base64Encode(str(node["node"]["resume"]).replace(search_name, '<span style="color: #822296; font-weight:600">'+search_name+'</span>')),
                 "index": index
             }
             index = index + 1
