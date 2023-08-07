@@ -225,7 +225,7 @@ def search_relationship_between(start_node_name, end_node_name, method):
                 "Invalid method value. Supported values are '1', '2', and '3'.")
 
         result = graph.run(query, start_name=start_node_name,
-                           end_name=end_node_name)
+                        end_name=end_node_name)
         # 逐条打印返回的关系信息，按照指定格式输出
         output_list = []
         for record in result:
