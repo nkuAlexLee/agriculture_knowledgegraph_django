@@ -70,7 +70,15 @@ def searchNode(request):
         query = f"""
             MATCH (node)
             WHERE node.name =~ '.*{search_name}.*' OR node.stockName =~ '.*{search_name}.*' OR node.resume =~ '.*{search_name}.*'
-            RETURN node;
+            RETURN node
+            ORDER BY
+            CASE
+                WHEN node.name = '{search_name}' THEN 1
+                WHEN node.name =~ '.*{search_name}.*' THEN 2
+                WHEN node.stockName =~ '.*{search_name}.*' THEN 3
+                WHEN node.resume =~ '.*{search_name}.*' THEN 4
+                ELSE 5
+            END;
          """
         result = graph.run(query)
 
