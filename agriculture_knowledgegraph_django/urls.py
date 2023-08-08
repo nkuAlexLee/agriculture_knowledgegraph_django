@@ -50,7 +50,9 @@ from agriculture_knowledgegraph_django.views.test import (
 from agriculture_knowledgegraph_django.views.AI import(
     getGptAnswer,
 )
-
+from agriculture_knowledgegraph_django.views.stockmessage import(
+    getStockAnswer,
+)
 urlpatterns = [
     # 其他URL配置
     path('admin/', admin.site.urls),
@@ -79,5 +81,6 @@ urlpatterns = [
     path('testSendMessage/', testSendMessage, name='test_send_message'),
     path('searchNode/', searchNode, name='searchNode'),
     path('recognizeNode/', recognizeNode, name='recognizeNode'),
-    path("getGptAnswer/", getGptAnswer, name="get_gpt_answer")
+    path("getGptAnswer/", getGptAnswer, name="get_gpt_answer"),
+    path('getStockAnswer/',getStockAnswer,name='get_stock_answer,')
 ]
