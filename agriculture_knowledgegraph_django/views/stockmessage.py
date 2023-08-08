@@ -14,10 +14,10 @@ def getStockAnswer(request):
         days= int(request.POST.get('days'))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
-    ans=getStockInformation(stock,days)
+    ans,message=getStockInformation(stock,days)
     if ans==None or ans==[]:
         return json_response({"success": False,"log": "search_error"})
-    return json_response({"success": True,"content":{"list":ans},"log": "success"})
+    return json_response({"success": True,"content":{"list":ans,"messsge":message},"log": "success"})
 
 def format_stock_code(stock_code):
     if re.match(r'^300\d{3}$', stock_code):
@@ -57,18 +57,18 @@ def getStockInformation(stock,days):
         print(stockmid)
         message={}
         if stockmid==None:
-            message['stockname']=copy.deepcopy(stock)
+            message["stockname"]=copy.deepcopy(stock)
             rs = bs.query_stock_industry()
             rs = bs.query_stock_basic(code_name=stock)
             stock=rs.get_row_data()[0]
-            message['stockid']=copy.deepcopy(stock)
+            message["stockid"]=copy.deepcopy(stock)
             print(message)
         else:
-            message['stockid']=copy.deepcopy(stockmid)
+            message["stockid"]=copy.deepcopy(stockmid)
             rs = bs.query_stock_industry()
             rs = bs.query_stock_basic(code=stockmid)
             stock=rs.get_row_data()[1]
-            message['stockname']=copy.deepcopy(stock)
+            message["stockname"]=copy.deepcopy(stock)
             print(message)
 
         current_date = datetime.date.today()
@@ -79,12 +79,12 @@ def getStockInformation(stock,days):
         new_date = current_date - days_before
         # 将日期格式化为所需的字符串格式
         formatted_before_date = new_date.strftime("%Y-%m-%d")
-        print(formatted_before_date,formatted_time)
+        # print(formatted_before_date,formatted_time)
 
         #### 登陆系统 ####
         # 显示登陆返回信息
-        print('login respond error_code:'+lg.error_code)
-        print('login respond  error_msg:'+lg.error_msg)
+        # print('login respond error_code:'+lg.error_code)
+        # print('login respond  error_msg:'+lg.error_msg)
 
         #### 获取沪深A股历史K线数据 ####
         # 详细指标参数，参见“历史行情指标参数”章节；“分钟线”参数与“日线”参数不同。“分钟线”不包含指数。
@@ -95,8 +95,8 @@ def getStockInformation(stock,days):
             "date,code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,isST",
             start_date=formatted_before_date, end_date=formatted_time,
             frequency="d", adjustflag="3")
-        print('query_history_k_data_plus respond error_code:'+rs.error_code)
-        print('query_history_k_data_plus respond  error_msg:'+rs.error_msg)
+        # print('query_history_k_data_plus respond error_code:'+rs.error_code)
+        # print('query_history_k_data_plus respond  error_msg:'+rs.error_msg)
 
         #### 打印结果集 ####
         data_list = []
@@ -109,10 +109,10 @@ def getStockInformation(stock,days):
             ans.append([data_list[i][0],data_list[i][2],data_list[i][5],data_list[i][4],data_list[i][3]])
         #### 结果集输出到csv文件 ####   
         # result.to_csv("D:\\history_A_stock_k_data.csv", index=False)
-        print(ans)
+        # print(ans)
         #### 登出系统 ####
         bs.logout()
-        return ans
+        return ans,message
     except Exception:
         return None
 
