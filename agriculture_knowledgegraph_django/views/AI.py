@@ -40,15 +40,16 @@ def matchjson(text):
 def getGptAnswer(request):
     if request.method == "POST":
         text = json.loads(request.POST.get('history'))
+        model = str(request.POST.get('model'))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
-    ans=getCqlGpt(text)
+    ans=getCqlGpt(text,model)
     if ans==None:
         ans="很抱歉无法理解您的问题，您可以使用如：“告诉我深圳市雄韬电源科技股份有限公司的上市时间”，“龙文是哪家公司的高管”等语句进行提问。"
     print('ans的值为：',ans)
     return json_response({"success": True,"content":ans,"log": "success"})
 
-def getCqlGpt(sentence,flag=0):
+def getCqlGpt(sentence,model,flag=0):
     if flag==3:
         print('回答失败1')
         return None
@@ -95,13 +96,13 @@ def getCqlGpt(sentence,flag=0):
         # print(middleans)
         # if middleans!=None and middleans!=[]:
         database=execute_query(middleans)
-        ans=getFinalAnsGpt(sentence,database,0)
+        ans=getFinalAnsGpt(sentence,database,model,0)
         return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
-        getCqlGpt(sentence,flag+1)
+        getCqlGpt(sentence,model,flag+1)
 
-def getFinalAnsGpt(sentence,middleans,flag=0):
+def getFinalAnsGpt(sentence,middleans,model,flag=0):
     middle=str(sentence)
     middle=middle.replace('(以上回答结合网站数据库)','')
     middle=middle.replace('(以上回答来自ChatGPT)','')
@@ -111,10 +112,18 @@ def getFinalAnsGpt(sentence,middleans,flag=0):
         return None
     ques=sentence[-1]['content']
     middleans=middleans[0:1500]
+    if model=='0':
+        tone='以商务严谨的语气'
+    elif model=='1':
+        tone='以猫娘的语气和可爱的emoji表情'
+    elif model=='2':
+        tone='以傲娇的语气'
+    else:
+        tone='以商务严谨的语气'
     # openai.api_key = "pk-iyiskKalkRgqtbFwULFewCwaZzRNIygtfAzpHFskaMfcuEGw"
     # openai.api_base = 'https://api.pawan.krd/v1'
     try:
-        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+middle+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并以猫娘的语气和可爱的emoji表情给出回答"""}]
+        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+middle+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
@@ -138,7 +147,7 @@ def getFinalAnsGpt(sentence,middleans,flag=0):
         return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
-        getFinalAnsGpt(sentence,middleans,flag+1)
+        getFinalAnsGpt(sentence,middleans,model,flag+1)
 
 @csrf_exempt
 def json_response(answer):
