@@ -40,6 +40,8 @@ from agriculture_knowledgegraph_django.views.email import (
 from agriculture_knowledgegraph_django.views.neo4j import (
     searchNode,
     recognizeNode,
+    searchRelationshipBetween,
+    getNodeDetail,
 )
 
 
@@ -67,7 +69,8 @@ urlpatterns = [
     path('forgetPassword/', forgetPassword, name='forget_password'),
     path('login/', login, name='login'),
     path('getUserMessage/', getUserMessage, name='get_user_message'),
-    path('updateAccountInformation/', updateAccountInformation, name='update_account_information'),
+    path('updateAccountInformation/', updateAccountInformation,
+         name='update_account_information'),
     path('updateUserPassword/', updateUserPassword, name='update_user_password'),
     path('updateUserIP/', updateUserIP, name='update_user_ip'),
     path('userFeedback/', userFeedback, name='user_feedback'),
@@ -81,6 +84,10 @@ urlpatterns = [
     path('testSendMessage/', testSendMessage, name='test_send_message'),
     path('searchNode/', searchNode, name='searchNode'),
     path('recognizeNode/', recognizeNode, name='recognizeNode'),
+    path('searchRelationshipBetween/', searchRelationshipBetween,
+         name='searchRelationshipBetween'),
+    path('getNodeDetail/', getNodeDetail, name='getNodeDetail'),
     path("getGptAnswer/", getGptAnswer, name="get_gpt_answer"),
     path('getStockAnswer/',getStockAnswer,name='get_stock_answer,')
+
 ]

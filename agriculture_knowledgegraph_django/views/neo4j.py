@@ -49,7 +49,7 @@ def parse(input_str):
         return None
 
 
-# 实体信息直接查询
+# 实体信息直接查询接口
 @csrf_exempt
 def searchNode(request):
     """
@@ -102,7 +102,6 @@ def searchNode(request):
         return None
 
 
-
 # 实体识别接口
 @csrf_exempt
 def recognizeNode(request):
@@ -110,26 +109,88 @@ def recognizeNode(request):
     if request.method == 'POST':
         text = request.POST.get('content')
     else:
-        return json_response({'success': False, 'content': []})   
+        return json_response({'success': False, 'content': []})
 
-    nodes = graph.run("MATCH (node) RETURN node.name AS node_name").data()
-    
+    nodes = graph.run(
+        "MATCH (node:Company) RETURN node.name AS node_name").data()
+
     # 用于跟踪已经替换过的节点名称及其替代文本
     replaced_nodes = {}
 
     for node in nodes:
         node_name = node["node_name"]
-        
+
         # 如果节点名称还没有替代文本，则执行替换
         if node_name not in replaced_nodes:
             tagged_node = "[[" + node_name + "]]"
             text = text.replace(node_name, tagged_node)
-            
+
             # 将节点名称及其替代文本添加到字典中
             replaced_nodes[node_name] = node_name
 
-    return json_response({'success': True, 'content': base64Encode(text)})  
+    print(base64Encode(text))
+    return json_response({'success': True, 'content': {'result': base64Encode(text)}})
 
+
+# 实体百科接口
+@csrf_exempt
+def getNodeDetail(request):
+
+    if request.method == 'POST':
+        id = int(request.POST.get('id'))
+    else:
+        return json_response({'success': False, 'content': []})
+
+    # 节点ency_content返回
+    nodes = graph.run(
+        f"MATCH (node)-[r]-() WHERE id(node)={id} RETURN node.name AS node_name,node.encycontent AS node_encycontent").data()
+    node = nodes[0]
+
+    name = node['node_name']
+    ency_content = node['node_encycontent']
+
+    # 节点map_content返回
+    nodes = graph.run(
+        f"MATCH (node) -[r]- (related) WHERE id(node)={id} RETURN type(r) AS relationship,STARTNODE(r).name AS start_name,ENDNODE(r).name AS end_name").data()
+
+    map_content = f"""- 界面配置
+- 关系
+[[{name}]]
+"""
+    for record in nodes:
+        relationship = record['relationship']
+        start_name = record['start_name']
+        end_name = record['end_name']
+
+        if relationship == "INVESTED_BY":
+            relationship = "被投资"
+            relationship_desc = f"{start_name}是被{end_name}所投资的"
+        elif relationship == "BELONGS_TO_INDUSTRY":
+            relationship = "所属产业"
+            relationship_desc = f"{start_name}的所属产业是{end_name}"
+        elif relationship == "OFFERS_PRODUCT":
+            relationship = "提供业务"
+            relationship_desc = f"{end_name}是{start_name}的其中一个提供业务"
+        elif relationship == "WORKS_FOR":
+            relationship = "就职于"
+            relationship_desc = f"{start_name}就职于{end_name}"
+
+        output = f"[[{start_name}]]--[[{end_name}]]={relationship}={relationship_desc}"
+        map_content += (output + '\n')
+
+    if ency_content == None:
+        ency_content = ""
+    if map_content == None:
+        map_content = ""
+    print(ency_content)
+    print(map_content)
+
+    return json_response({'success': True, 'content': {
+        'name': base64Encode(name),
+        'encycontent': base64Encode(ency_content),
+        'mapcontent': base64Encode(map_content)
+
+    }})
 
 
 # # 单实体直接关系查询
@@ -181,64 +242,83 @@ def recognizeNode(request):
 #         return None
 
 
-# # 实体间关系查询
-# @csrf_exempt
-# def searchRelationshipBetween(start_node_name, end_node_name, method):
-#     """
-#     实体间关系查询
+# 实体间关系查询接口
+@csrf_exempt
+def searchRelationshipBetween(request):
+    """
+    实体间关系查询
 
-#     参数：
-#     start_node_name: 起始节点名称
-#     end_node_name: 终止节点名称
-#     method: 查询方式，"1"为最短关系，"2"为最长关系，"3"为最短的十条关系
+    参数：
+    start_node_name: 起始节点名称
+    end_node_name: 终止节点名称
+    method: 查询方式，"1"为最短关系，"2"为最长关系，"3"为最短的十条关系
 
-#     返回值：
-#     查询到的关系数据，如果没有找到则返回None
-#     """
-#     try:
-#         if method == "1":
-#             query = """
-#                 MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
-#                 MATCH path = shortestPath((startNode)-[*]-(endNode))
-#                 UNWIND relationships(path) AS r
-#                 RETURN r;
-#             """
-#         elif method == "2":
-#             query = """
-#                 MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
-#                 MATCH path = (startNode)-[*]-(endNode)
-#                 UNWIND relationships(path) AS r
-#                 RETURN r ORDER BY length(path) DESC LIMIT 1;
-#             """
-#         elif method == "3":
-#             query = """
-#                 MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
-#                 MATCH path = allShortestPath((startNode)-[*]-(endNode))
-#                 UNWIND relationships(path) AS r
-#                 RETURN r LIMIT 10;
-#             """
-#         else:
-#             raise ValueError(
-#                 "Invalid method value. Supported values are '1', '2', and '3'.")
+    返回值：
+    查询到的关系数据，如果没有找到则返回None
+    """
+    if request.method == "POST":
+        start_node_name = request.POST.get('start_node_name')
+        end_node_name = request.POST.get('end_node_name')
+        method = request.POST.get('method')
+    else:
+        return json_response({'success': False, 'content': []})
+    print(start_node_name)
+    print(end_node_name)
+    print(method)
+    try:
+        if method == "1":
+            query = """
+                MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
+                MATCH path = shortestPath((startNode)-[*]-(endNode))
+                UNWIND relationships(path) AS r
+                RETURN type(r) AS relationship,STARTNODE(r).name AS start_name,ENDNODE(r).name AS end_name;
+            """
+        elif method == "2":
+            query = """
+                MATCH (startNode {name: $start_name}), (endNode {name: $end_name})
+                MATCH path = (startNode)-[*]-(endNode)
+                UNWIND relationships(path) AS r
+                RETURN type(r) AS relationship,STARTNODE(r).name AS start_name,ENDNODE(r).name AS end_name 
+                ORDER BY length(path) DESC LIMIT 1;
+            """
+        else:
+            raise ValueError(
+                "Invalid method value. Supported values are '1', '2', and '3'.")
 
-#         result = graph.run(query, start_name=start_node_name,
-#                            end_name=end_node_name)
-#         # 逐条打印返回的关系信息，按照指定格式输出
-#         output_list = []
-#         for record in result:
-#             relationship_data = record['r']
-#             output = f"[[{start_node_name}]]--[[{end_node_name}]]= {relationship_data['type']}={{ relationship_data['data'] }}"
-#             output_list.append(output)
+        result = graph.run(query, start_name=start_node_name,
+                           end_name=end_node_name)
+        # 逐条打印返回的关系信息，按照指定格式输出
+        output_list = ""
+        for record in result:
+            relationship = record['relationship']
+            start_name = record['start_name']
+            end_name = record['end_name']
 
-#         return output_list if output_list else []
+            if relationship == "INVESTED_BY":
+                relationship = "被投资"
+                relationship_desc = f"{start_name}是被{end_name}所投资的"
+            elif relationship == "BELONGS_TO_INDUSTRY":
+                relationship = "所属产业"
+                relationship_desc = f"{start_name}的所属产业是{end_name}"
+            elif relationship == "OFFERS_PRODUCT":
+                relationship = "提供业务"
+                relationship_desc = f"{end_name}是{start_name}的其中一个提供业务"
+            elif relationship == "WORKS_FOR":
+                relationship = "就职于"
+                relationship_desc = f"{start_name}就职于{end_name}"
 
-#     except ClientError as e:
-#         print(f"Error searching relationship: {e}")
-#         return None
+            output = f"[[{start_name}]]--[[{end_name}]]={relationship}={relationship_desc}"
+            output_list += (output + '\n')
+        print(output_list)
+
+        return json_response({'success': True, 'content': {'result': base64Encode(output_list)}})
+
+    except ClientError as e:
+        print(f"Error searching relationship: {e}")
+        return None
 
 
 @csrf_exempt
 def json_response(answer):
     print(answer)
     return HttpResponse(json.dumps(answer, ensure_ascii=False))
-
