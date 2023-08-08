@@ -13,7 +13,7 @@ openai.api_base = "https://api.chatanywhere.com.cn/v1"
 def execute_query(query, params={}):
     uri = "bolt://localhost:7687"  # 更新为你的Neo4j数据库URI
     username = "neo4j" # 更新为你的Neo4j用户名
-    password = "xy639a58"    # 更新为你的Neo4j密码
+    password = "yu242698"    # 更新为你的Neo4j密码
     driver=GraphDatabase.driver(uri, auth=(username, password))
     session=driver.session() 
     # print(query, params)
@@ -36,7 +36,8 @@ def matchjson(text):
 @csrf_exempt
 def getGptAnswer(request):
     if request.method == "POST":
-        text = request.POST.get('history')
+        text = json.loads(request.POST.get('history'))
+        print('text',text)
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
     ans=getCqlGpt(text)
@@ -105,7 +106,7 @@ def getFinalAnsGpt(sentence,middleans,flag=0):
     # openai.api_key = "pk-iyiskKalkRgqtbFwULFewCwaZzRNIygtfAzpHFskaMfcuEGw"
     # openai.api_base = 'https://api.pawan.krd/v1'
     try:
-        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+str(sentence)+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并给出回答"""}]
+        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+str(sentence)+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并以猫娘的语气和可爱的emoji表情给出回答"""}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
