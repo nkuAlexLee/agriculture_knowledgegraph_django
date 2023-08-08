@@ -203,7 +203,7 @@ def getUserMessage(request):
             "login_name": user_name.LOGIN_NAME,
             "user_type": user_name.USER_TYPE,
             "sex": user_name.SEX,
-            "born_time": user_name.BORN_TIME,
+            "born_time": str(user_name.BORN_TIME),
             "create_time": user_name.CREATE_TIME,
             "error_count": user_name.ERROR_COUNT,
             "status": user_name.STATUS,
@@ -219,7 +219,7 @@ def getUserMessage(request):
 
 
 @csrf_exempt
-def updateAcountInformation(request):
+def updateAccountInformation(request):
     """
     函数名：updateAcountInformation
     功能：更新用户基础信息
@@ -233,6 +233,7 @@ def updateAcountInformation(request):
     if request.method == "POST":
         id = request.POST.get("id")
         token = base64AesDecrypt(request.POST.get("token"))
+        name = request.POST.get("name")
         sex = request.POST.get("sex")
         occupation = request.POST.get("occupation")
         born_time = request.POST.get("born_time")
@@ -250,6 +251,9 @@ def updateAcountInformation(request):
         )
     # 更新用户基础信息
     user = SYS_USER.objects.get(ID=id)
+    print(name)
+    if name:
+        user.LOGIN_NAME=name
     user.SEX = sex
     user.OCCUPATION = occupation
     user.BORN_TIME = born_time
