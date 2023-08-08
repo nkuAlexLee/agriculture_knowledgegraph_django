@@ -17,7 +17,7 @@ def getStockAnswer(request):
     ans,message=getStockInformation(stock,days)
     if ans==None or ans==[]:
         return json_response({"success": False,"log": "search_error"})
-    return json_response({"success": True,"content":{"list":ans,"messsge":message},"log": "success"})
+    return json_response({"success": True,"content":{"list":ans,"message":message},"log": "success"})
 
 def format_stock_code(stock_code):
     if re.match(r'^300\d{3}$', stock_code):
@@ -114,7 +114,7 @@ def getStockInformation(stock,days):
         bs.logout()
         return ans,message
     except Exception:
-        return None
+        return None,None
 
 
 @csrf_exempt
