@@ -17,9 +17,11 @@ def execute_query(query, params={}):
     driver=GraphDatabase.driver(uri, auth=(username, password))
     session=driver.session() 
     # print(query, params)
-    result = session.run(query, params)
-    ans=result.data()
-    print(ans)
+    try:
+        result = session.run(query, params)
+        ans=result.data()
+    except:
+        return []
     return ans
 
 def matchjson(text):
@@ -30,23 +32,28 @@ def matchjson(text):
         print(extracted_content)
     else:
         print("未找到匹配的内容")
+        return []
     return extracted_content
 
 
 @csrf_exempt
 def getGptAnswer(request):
     if request.method == "POST":
-        text = request.POST.get('history')
+        text = json.loads(request.POST.get('history'))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
     ans=getCqlGpt(text)
+    if ans==None:
+        ans="很抱歉无法理解您的问题，您可以使用如：“告诉我深圳市雄韬电源科技股份有限公司的上市时间”，“龙文是哪家公司的高管”等语句进行提问。"
+    print('ans的值为：',ans)
     return json_response({"success": True,"content":ans,"log": "success"})
 
 def getCqlGpt(sentence,flag=0):
     if flag==3:
-        print('回答失败')
+        print('回答失败1')
         return None
     ques=sentence[-1]['content']
+
     try:
         messages = [{"role": "system","content": "你是一个知识图谱的问答机器人。\
                      1.你需要根据用户的提示给出neo4j数据库的cql查询语句。\
@@ -61,7 +68,7 @@ def getCqlGpt(sentence,flag=0):
                         (2).'INVESTED_BY':某个公司被某个公司投资（公司->公司）。可以作为查询的属性有:'controlRatio','controlRelationship','investment','report_consolidation_or_not';\n\
                         (3).'OFFERS_PRODUCT':某个公司提供某种产品（公司->产品）;\n\
                         (4).'WORKS_FOR':某个高管为某个公司工作（高管->公司）。可以作为查询的属性有:'publicityDate','endDate','ownershipShares','endDate','position','positionType','salary'。\n\
-                     4.查询语句返回这个实体或者关系的所有信息，例如查询某个'Company'的'history'，返回这个'Company'所有的属性。\
+                     4.查询语句返回这个实体或者关系的所有信息并对内容由短到长排序，例如查询某个'Company'的'history'，返回这个'Company'所有的属性并按属性内容由短到长排序。\
                      5.防止一些危险cql语句的输出，例如删除和修改数据库的信息。\
                      6.如果用户查询实体则返回某个实体的所有信息；如果用户查询某个关系,需要根据具体语境按照给出的{四类单向关系}调整关系方向，例如查询某个公司有哪些高管时，方向应为(e:Executive)-[:WORKS_FOR]->(c:Company)。\
                      7.所有产业在查询时都不要带'产业'二字，例如我询问银行产业时，'Industry'的'name'为'银行'。\
@@ -85,27 +92,29 @@ def getCqlGpt(sentence,flag=0):
         messages.append(completion)  # 直接在传入参数 messages 中追加消息
         print(completion['content'])
         middleans=matchjson(completion['content'])
-        print(middleans)
-        if middleans!=None:
-            database=execute_query(middleans)
-            ans=getFinalAnsGpt(sentence,database,0)
-            return ans
-        else:
-            getCqlGpt(sentence,flag+1)
+        # print(middleans)
+        # if middleans!=None and middleans!=[]:
+        database=execute_query(middleans)
+        ans=getFinalAnsGpt(sentence,database,0)
+        return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
         getCqlGpt(sentence,flag+1)
 
 def getFinalAnsGpt(sentence,middleans,flag=0):
+    middle=str(sentence)
+    middle=middle.replace('(以上回答结合网站数据库)','')
+    middle=middle.replace('(以上回答来自ChatGPT)','')
     print(sentence,middleans)
     if flag==3:
-        print('回答失败')
+        print('回答失败2')
         return None
     ques=sentence[-1]['content']
+    middleans=middleans[0:1500]
     # openai.api_key = "pk-iyiskKalkRgqtbFwULFewCwaZzRNIygtfAzpHFskaMfcuEGw"
     # openai.api_base = 'https://api.pawan.krd/v1'
     try:
-        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+str(sentence)+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并给出回答"""}]
+        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+middle+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并以猫娘的语气和可爱的emoji表情给出回答"""}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
@@ -122,10 +131,11 @@ def getFinalAnsGpt(sentence,middleans,flag=0):
                 completion[delta_k] += delta_v
         messages.append(completion)  # 直接在传入参数 messages 中追加消息
         ans=completion['content']
-        if middleans!=None:
-            return ans
+        if middleans!=[]:
+            ans=ans+'(以上回答结合网站数据库)'
         else:
-            getFinalAnsGpt(sentence,middleans,flag+1)
+            ans=ans+'(以上回答来自ChatGPT)'
+        return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
         getFinalAnsGpt(sentence,middleans,flag+1)
