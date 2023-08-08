@@ -20,6 +20,11 @@ def getStockAnswer(request):
     return json_response({"success": True,"content":{"list":ans,"message":message},"log": "success"})
 
 def format_stock_code(stock_code):
+    pattern = r'\b\d{6}\b'
+    try:
+        stock_code= re.search(pattern, stock_code).group()
+    except Exception:
+        return None
     if re.match(r'^300\d{3}$', stock_code):
         return f"sz.{stock_code}"
     elif re.match(r'^(600|601|603)\d{3}$', stock_code):
