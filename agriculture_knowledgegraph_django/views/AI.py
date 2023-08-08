@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date
 import json
-
+import ast
 
 
 openai.api_key = "sk-gKgzDgwfjJNxElEsXK7wXqSDNFDmGVHXJNHqvGTMHgFz6B3m"
@@ -25,15 +25,20 @@ def execute_query(query, params={}):
     return ans
 
 def matchjson(text):
-    pattern = r"{'cql': \"(.*?)\"}"
-    match = re.search(pattern, text)
-    if match:
-        extracted_content = match.group(1)
-        print(extracted_content)
-    else:
-        print("未找到匹配的内容")
+    try:
+        matches = str((ast.literal_eval(text))['cql'])
+        return matches 
+    except:
+        pass
+    try:
+        pattern = r'\{(.+)\}'
+        match=re.search(pattern, str(text)).group()
+        matches = str((ast.literal_eval(match))['cql'])
+    except Exception as e:
+        print(match,e)
         return []
-    return extracted_content
+    print(matches)
+    return matches 
 
 
 @csrf_exempt
@@ -96,13 +101,15 @@ def getCqlGpt(sentence,model,flag=0):
         # print(middleans)
         # if middleans!=None and middleans!=[]:
         database=execute_query(middleans)
-        ans=getFinalAnsGpt(sentence,database,model,0)
+        print('cql为',database)
+        print('database为',database)
+        ans=getFinalAnsGpt(sentence,database,model,middleans,0)
         return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
         getCqlGpt(sentence,model,flag+1)
 
-def getFinalAnsGpt(sentence,middleans,model,flag=0):
+def getFinalAnsGpt(sentence,middleans,model,cql,flag=0):
     middle=str(sentence)
     middle=middle.replace('(以上回答结合网站数据库)','')
     middle=middle.replace('(以上回答来自ChatGPT)','')
@@ -123,7 +130,7 @@ def getFinalAnsGpt(sentence,middleans,model,flag=0):
     # openai.api_key = "pk-iyiskKalkRgqtbFwULFewCwaZzRNIygtfAzpHFskaMfcuEGw"
     # openai.api_base = 'https://api.pawan.krd/v1'
     try:
-        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据用户的历史问答和已经根据问题查询到的数据库信息回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+middle+";\n"+"""用户当前问题为:"""+ques+";\n从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
+        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据{用户的历史问答}和{结合问题查询的cql语句的含义}和{已经根据cql语句查询到的数据库信息}回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+middle+";\n"+"""用户当前问题为:"""+ques+";\nneo4j数据库运行的cql语句为:"+str(cql)+";\n运行该语句从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
@@ -147,7 +154,7 @@ def getFinalAnsGpt(sentence,middleans,model,flag=0):
         return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
-        getFinalAnsGpt(sentence,middleans,model,flag+1)
+        getFinalAnsGpt(sentence,middleans,model,cql,flag+1)
 
 @csrf_exempt
 def json_response(answer):
