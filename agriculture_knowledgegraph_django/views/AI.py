@@ -137,7 +137,7 @@ def getFinalAnsGpt(sentence, middleans, model, cql, flag=0):
     # openai.api_base = 'https://api.pawan.krd/v1'
     try:
         messages = [{"role": "system", "content": "你是一个知识图谱的问答机器人。需要根据{用户的历史问答}和{结合问题查询的cql语句的含义}和{已经根据cql语句查询到的数据库信息}回答用户的问题。"}, {'role': 'user', 'content': """用户的历史问答为:""" +
-                                                                                                                                   middle+";\n"+"""用户当前问题为:"""+ques+";\nneo4j数据库运行的cql语句为:"+str(cql)+";\n运行该语句从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
+                    middle+";\n"+"""用户当前问题为:"""+ques+";\nneo4j数据库运行的cql语句为:"+str(cql)+";\n运行该语句从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
