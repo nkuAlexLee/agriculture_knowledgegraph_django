@@ -6,16 +6,17 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import date
 import json
 import ast
-
+from agriculture_knowledgegraph_django.settings import DATABASES
 
 openai.api_key = "sk-gKgzDgwfjJNxElEsXK7wXqSDNFDmGVHXJNHqvGTMHgFz6B3m"
 openai.api_base = "https://api.chatanywhere.com.cn/v1"
 
 
+
 def execute_query(query, params={}):
-    uri = "bolt://localhost:7687"  # 更新为你的Neo4j数据库URI
-    username = "neo4j"  # 更新为你的Neo4j用户名
-    password = "12345678"    # 更新为你的Neo4j密码
+    uri = DATABASES['neo4j']['uri']  # 更新为你的Neo4j数据库URI
+    username = DATABASES['neo4j']['username'] # 更新为你的Neo4j用户名
+    password = DATABASES['neo4j']['password']   # 更新为你的Neo4j密码
     driver = GraphDatabase.driver(uri, auth=(username, password))
     session = driver.session()
     # print(query, params)

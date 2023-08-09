@@ -12,10 +12,13 @@ from datetime import date
 import json
 import time
 import random
+from agriculture_knowledgegraph_django.settings import DATABASES
 
-
+uri = DATABASES['neo4j']['uri']  # 更新为你的Neo4j数据库URI
+username = DATABASES['neo4j']['username'] # 更新为你的Neo4j用户名
+password = DATABASES['neo4j']['password']   # 更新为你的Neo4j密码
 # 连接到Neo4j数据库
-graph = Graph("bolt://localhost:7687", auth=("neo4j", "12345678"))
+graph = Graph(uri , auth=(username, password))
 
 
 # 解析文本内容，获取需要的参数

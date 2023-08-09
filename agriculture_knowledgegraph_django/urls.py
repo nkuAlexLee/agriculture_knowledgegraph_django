@@ -58,6 +58,7 @@ from agriculture_knowledgegraph_django.views.AI import (
 )
 from agriculture_knowledgegraph_django.views.stockmessage import (
     getStockAnswer,
+    getStocklistAnswer,
 )
 urlpatterns = [
     # 其他URL配置
@@ -96,6 +97,6 @@ urlpatterns = [
     path('setMapContent', setMapContent, name='setMapContent'),
     path('getOverview/', getOverview, name='getOverview'),
     path("getGptAnswer/", getGptAnswer, name="get_gpt_answer"),
-    path('getStockAnswer/', getStockAnswer, name='get_stock_answer,')
-
+    path('getStockAnswer/', getStockAnswer, name='get_stock_answer,'),
+    path('getStocklistAnswer/', getStocklistAnswer, name='get_stock_list_answer,')
 ]
