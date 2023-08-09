@@ -92,8 +92,8 @@ urlpatterns = [
     path('getNodeResume/', getNodeResume, name='getNodeResume'),
     path('searchRelationshipBetween/', searchRelationshipBetween,
          name='searchRelationshipBetween'),
-    path('setEncyContent', setEncyContent, name='setEncyContent'),
-    path('setMapContent', setMapContent, name='setMapContent'),
+    path('setEncyContent/', setEncyContent, name='setEncyContent'),
+    path('setMapContent/', setMapContent, name='setMapContent'),
     path('getOverview/', getOverview, name='getOverview'),
     path("getGptAnswer/", getGptAnswer, name="get_gpt_answer"),
     path('getStockAnswer/', getStockAnswer, name='get_stock_answer,')

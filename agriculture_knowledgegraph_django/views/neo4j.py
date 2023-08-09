@@ -133,7 +133,7 @@ def recognizeNode(request):
             # 将节点名称及其替代文本添加到字典中
             replaced_nodes[node_name] = node_name
 
-    print(base64Encode(text))
+    print(text)
     return json_response({'success': True, 'content': {'result': base64Encode(text)}})
 
 
@@ -150,6 +150,8 @@ def getNodeResume(request):
     nodes = graph.run(
         f"MATCH (node) WHERE id(node)={id} RETURN node.resume AS node_resume").data()
     node = nodes[0]
+    if not node['node_resume']:
+        return json_response({'success': False, 'content': []})
     return json_response({'success': True, 'content': {'result': base64Encode(node['node_resume'])}})
 
 
@@ -311,7 +313,7 @@ def setEncyContent(request):
 
     # 更改ency_content
     graph.run(
-        f"MATCH (node)-[r]-() WHERE id(node)={id} SET node.encycontent={ency_content}")
+        f"MATCH (node) WHERE id(node)={id} SET node.encycontent='{ency_content}'")
     return json_response({'success': True})
 
 
