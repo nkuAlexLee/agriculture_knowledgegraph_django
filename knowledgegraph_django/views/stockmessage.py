@@ -15,16 +15,17 @@ def getStockAnswer(request):
         if model=='d':
             days= int(request.POST.get('days'))
             ans,message=getStockDayInformation(stock,days)
-        if model=='m':
+        elif model=='m':
             minute= int(request.POST.get('minute'))
             ans,message=getStockMinuteInformation(stock,minute)
-        if model=='w':
+        elif model=='w':
             days= int(request.POST.get('days'))
             ans,message=getStockWeekInformation(stock,days)
-        if model=='M':
+        elif model=='M':
             days= int(request.POST.get('days'))
             ans,message=getStockMonthInformation(stock,days)
-
+        else:
+            return json_response({"success": False, "log": "wrong_model"})
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
     if ans==None or ans==[]:
@@ -40,6 +41,17 @@ def getStocklistAnswer(request):
         return json_response({"success": True,"content":ans,"log": "success"})
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
+
+def convert_to_formatted_datetime(input_string):
+    try:
+        # 解析输入字符串为datetime对象
+        input_datetime = datetime.datetime.strptime(input_string, "%Y%m%d%H%M%S%f")
+
+        # 格式化为目标字符串格式
+        output_string = input_datetime.strftime("%H:%M")
+        return output_string
+    except ValueError:
+        return None
 
 def format_stock_code(stock_code):
     pattern = r'\b\d{6}\b'
@@ -121,15 +133,18 @@ def getStockMinuteInformation(stock,minute):
             # 获取一条记录，将记录合并在一起
             data_list.append(rs.get_row_data())
         # result = pd.DataFrame(data_list, columns=rs.fields)
+        # print(result)
         for i in range(len(data_list)):
-            ans.append([data_list[i][0],data_list[i][2],data_list[i][5],data_list[i][4],data_list[i][3]])
+            ans.append([convert_to_formatted_datetime(data_list[i][1]),data_list[i][6],str(float(data_list[i][8])/float(data_list[i][7]))])
         #### 结果集输出到csv文件 ####   
         # result.to_csv("D:\\history_A_stock_k_data.csv", index=False)
         # print(ans)
         #### 登出系统 ####
         bs.logout()
+        print(ans)
         return ans,message
-    except Exception:
+    except Exception as e:
+        print(e)
         return None,None
 
 def getStockDayInformation(stock,days):
