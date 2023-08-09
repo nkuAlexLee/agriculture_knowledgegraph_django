@@ -29,26 +29,19 @@ def parse(input_str):
     返回值：
     如果匹配成功，返回元组 (a, b, friend, description, has_ai)，否则返回 None。
     """
+
+    input_str = input_str
+
     # 正则表达式模式
-    pattern = r'\[\[([^]]+)\]\]--\[\[([^]]+)\]\]=([^=]+)={{([^{}]+)}}(=AI)?'
+    pattern = r'\[\[(\d+)\|([^\]]+)\]\]--\[\[(\d+)\|([^\]]+)\]\]=(.*?)=([^\[]+)'
 
-    input_str = base64Decode(input_str)
-
-    # 使用正则表达式进行匹配
     match = re.search(pattern, input_str)
-
     if match:
-        a = match.group(1)
-        b = match.group(2)
-        a_id = a.split('|')[0]
-        a_name = a.split('|')[1]
-        b_id = b.split('|')[0]
-        b_name = b.split('|')[1]
-        rel = match.group(3)
-        description = match.group(4)
-        has_ai = True if match.group(5) else False
-
-        return a_id, b_id, rel, description, has_ai
+        a_id, a_name, b_id, b_name, rel, rel_desc = match.groups()
+        print(f"公司1 ID: {a_id}, 公司1名称: {a_name}")
+        print(f"公司2 ID: {b_id}, 公司2名称: {b_name}")
+        print(f"所属产业: {rel}")
+        return a_id, b_id, rel
     else:
         return None
 
@@ -164,9 +157,10 @@ def getNodeDetail(request):
     else:
         return json_response({'success': False, 'content': []})
 
+    print(id)
     # 节点ency_content返回
     nodes = graph.run(
-        f"MATCH (node)-[r]-() WHERE id(node)={id} RETURN node.name AS node_name,node.encycontent AS node_encycontent").data()
+        f"MATCH (node) WHERE id(node)={id} RETURN node.name AS node_name,node.encycontent AS node_encycontent").data()
     node = nodes[0]
 
     name = node['node_name']
@@ -208,7 +202,7 @@ def getNodeDetail(request):
     if map_content == None:
         map_content = ""
     # print(ency_content)
-    # print(map_content)
+    print(map_content)
 
     return json_response({'success': True, 'content': {
         'name': base64Encode(name),
@@ -331,9 +325,15 @@ def setMapContent(request):
     graph.run(
         f"MATCH (node)-[r]-() WHERE ID(node) = {id} DELETE r").data()
 
-    rel_list = map_content.split('\n').trim()
+    rel_list = map_content.split('\n')
+    i = 0
     for rel_ele in rel_list:
-        a_id, b_id, relationship, rel_desc, has_ai = parse(rel_ele)
+        i = i+1
+        if i < 4:
+            continue
+        print(rel_ele)
+
+        a_id, b_id, relationship = parse(rel_ele)
         if relationship == "被投资":
             relationship = "INVESTED_BY"
         elif relationship == "所属产业":
@@ -343,7 +343,7 @@ def setMapContent(request):
         elif relationship == "就职于":
             relationship = "WORKS_FOR"
         graph.run(
-            f"MATCH (a),(b) WHERE ID(a) = {a_id} AND ID(b) = {b_id} SET (a)-[{relationship}]->(b)")
+            f"MATCH (a),(b) WHERE ID(a) = {a_id} AND ID(b) = {b_id} CREATE (a)-[:{relationship}]->(b)")
 
     return json_response({'success': True})
 

@@ -289,5 +289,5 @@ def set_encycontent(name, encycontent_value):
     graph.run(query)
 
 
-set_encycontent_for_company()
+ # set_encycontent_for_company()
 
