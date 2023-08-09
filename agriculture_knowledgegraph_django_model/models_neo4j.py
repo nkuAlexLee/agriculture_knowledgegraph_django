@@ -156,13 +156,119 @@ def tableInit(table_list, name):
     return temp
 
 
-# print(tableInit(str_table, table_list, "测试"))
-
-
 def set_encycontent_for_company():
     i = 0
     nodes = graph.run(
-        "MATCH (node:Company) RETURN node.name AS node_name,node.resume AS node_resume"
+        "MATCH (node:Company) RETURN node.name AS node_name, node.establishmentDate AS node_establishmentDate, node.resumme AS node_resume,node.history AS node_history,node.baike AS node_baike,"
+        "node.officeAddress AS node_officeAddress, node.leadUnderwriter AS node_leadUnderwriter,"
+        "node.actualController AS node_actualController, node.secretary AS node_secretary,"
+        "node.registrationCapital AS node_registrationCapital, node.employeeNumber AS node_employeeNumber,"
+        "node.industry AS node_industry, node.productName AS node_productName,"
+        "node.stockName AS node_stockName, node.stockCode AS node_stockCode,"
+        "node.website AS node_website"
+    ).data()
+    for node in nodes:
+        if not node['node_stockName']:
+            continue
+        i = i+1
+        table_list = []
+        if node['node_establishmentDate']:
+            table_list.append({
+                "title": "创建时间",
+                "content": node['node_establishmentDate']
+            })
+        if node['node_officeAddress']:
+            table_list.append({
+                "title": "办公地点",
+                "content": node['node_officeAddress']
+            })
+        if node['node_leadUnderwriter']:
+            table_list.append({
+                "title": "主承销商",
+                "content": node['node_leadUnderwriter']
+            })
+        if node['node_actualController']:
+            table_list.append({
+                "title": "董事长",
+                "content": node['node_actualController']
+            })
+        if node['node_secretary']:
+            table_list.append({
+                "title": "董秘",
+                "content": node['node_secretary']
+            })
+        if node['node_registrationCapital']:
+            table_list.append({
+                "title": "注册资金",
+                "content": node['node_registrationCapital']
+            })
+        if node['node_employeeNumber']:
+            table_list.append({
+                "title": "员工数量",
+                "content": node['node_employeeNumber']
+            })
+        if node['node_industry']:
+            table_list.append({
+                "title": "产业",
+                "content": node['node_industry']
+            })
+        if node['node_productName']:
+            table_list.append({
+                "title": "产品名称",
+                "content": node['node_productName']
+            })
+        if node['node_stockName']:
+            table_list.append({
+                "title": "股票名称",
+                "content": node['node_stockName']
+            })
+        if node['node_stockCode']:
+            table_list.append({
+                "title": "股票代码",
+                "content": node['node_stockCode']
+            })
+        if node['node_website']:
+            table_list.append({
+                "title": "公司网址",
+                "content": node['node_website']
+            })
+
+        node_list = []
+        if table_list:
+            node_list.append({
+                "title": "公司信息",
+                "content": tableInit(table_list, node['node_name']),
+            })
+
+        if node['node_resume']:
+            node_list.append({
+                "title": "公司简介",
+                "content": node['node_resume'].replace('\n', '\n\n')
+            })
+
+        if node['node_history']:
+            node_list.append({
+                "title": "公司历史",
+                "content": node['node_history'].replace('\n', '\n\n')
+            })
+
+        if node['node_baike']:
+            node_list.append({
+                "title": "百度百科",
+                "content": node['node_baike'].replace('\n', '\n\n')
+            })
+
+        ency_content = encyInit(node_list, node['node_name'])
+        set_encycontent(node['node_name'], ency_content.replace('\'', ''))
+        print('进度: '+str(i)+'/107090')
+
+# print(tableInit(str_table, table_list, "测试"))
+
+
+def set_encycontent_for_Person():
+    i = 0
+    nodes = graph.run(
+        "MATCH (node:Person) RETURN node.name AS node_name,node.resume AS node_resume"
     ).data()
     for node in nodes:
         if not node['node_resume']:
@@ -172,7 +278,7 @@ def set_encycontent_for_company():
             # print(ency_content)
             set_encycontent(node['node_name'].replace(
                 '\'', ''), ency_content.replace('\'', ''))
-            print('进度: '+str(i)+'/50000')
+            print('进度: '+str(i)+'/72019')
 
 
 def set_encycontent(name, encycontent_value):
@@ -184,3 +290,4 @@ def set_encycontent(name, encycontent_value):
 
 
 set_encycontent_for_company()
+

@@ -42,6 +42,10 @@ from agriculture_knowledgegraph_django.views.neo4j import (
     recognizeNode,
     searchRelationshipBetween,
     getNodeDetail,
+    getNodeResume,
+    setEncyContent,
+    setMapContent,
+    getOverview,
 )
 
 
@@ -49,22 +53,22 @@ from agriculture_knowledgegraph_django.views.test import (
     testSendMessage,
 )
 
-from agriculture_knowledgegraph_django.views.AI import(
+from agriculture_knowledgegraph_django.views.AI import (
     getGptAnswer,
 )
-from agriculture_knowledgegraph_django.views.stockmessage import(
+from agriculture_knowledgegraph_django.views.stockmessage import (
     getStockAnswer,
 )
 urlpatterns = [
     # 其他URL配置
     path('admin/', admin.site.urls),
     path('sendEmailVerification/', sendEmailVerification,
-        name='send_email_verification'),
+         name='send_email_verification'),
     path('verifyEmailCode/', verifyEmailCode, name='verify_email_code'),
     path('accountRegistration/', accountRegistration,
-        name='account_registration'),
+         name='account_registration'),
     path('accountCancellation/', accountCancellation,
-        name='account_cancellation'),
+         name='account_cancellation'),
     path('updateUserEmail/', updateUserEmail, name='update_user_email'),
     path('forgetPassword/', forgetPassword, name='forget_password'),
     path('login/', login, name='login'),
@@ -76,18 +80,22 @@ urlpatterns = [
     path('userFeedback/', userFeedback, name='user_feedback'),
     path('avatarSubmission/', avatarSubmission, name='avatar_submission'),
     path('getUserRealNameMessage/', getUserRealNameMessage,
-        name='get_user_real_name_message'),
+         name='get_user_real_name_message'),
     path('updateUserRealNameMessage/', updateUserRealNameMessage,
-        name='update_user_real_name_message'),
+         name='update_user_real_name_message'),
     path('deleteUserRealNameMessage/', deleteUserRealNameMessage,
-        name='delete_user_real_name_message'),
+         name='delete_user_real_name_message'),
     path('testSendMessage/', testSendMessage, name='test_send_message'),
     path('searchNode/', searchNode, name='searchNode'),
     path('recognizeNode/', recognizeNode, name='recognizeNode'),
+    path('getNodeDetail/', getNodeDetail, name='getNodeDetail'),
+    path('getNodeResume/', getNodeResume, name='getNodeResume'),
     path('searchRelationshipBetween/', searchRelationshipBetween,
          name='searchRelationshipBetween'),
-    path('getNodeDetail/', getNodeDetail, name='getNodeDetail'),
+    path('setEncyContent', setEncyContent, name='setEncyContent'),
+    path('setMapContent', setMapContent, name='setMapContent'),
+    path('getOverview/', getOverview, name='getOverview'),
     path("getGptAnswer/", getGptAnswer, name="get_gpt_answer"),
-    path('getStockAnswer/',getStockAnswer,name='get_stock_answer,')
+    path('getStockAnswer/', getStockAnswer, name='get_stock_answer,')
 
 ]

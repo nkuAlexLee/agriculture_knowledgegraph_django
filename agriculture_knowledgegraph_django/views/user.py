@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from agriculture_knowledgegraph_django.utils import base64AesDecrypt, base64AesEncrypt,base64Decode
 import requests
 import base64
+import time
 
 # 水木
 @csrf_exempt
