@@ -10,35 +10,38 @@ import ast
 
 openai.api_key = "sk-gKgzDgwfjJNxElEsXK7wXqSDNFDmGVHXJNHqvGTMHgFz6B3m"
 openai.api_base = "https://api.chatanywhere.com.cn/v1"
+
+
 def execute_query(query, params={}):
     uri = "bolt://localhost:7687"  # 更新为你的Neo4j数据库URI
-    username = "neo4j" # 更新为你的Neo4j用户名
-    password = "xy639a58"    # 更新为你的Neo4j密码
-    driver=GraphDatabase.driver(uri, auth=(username, password))
-    session=driver.session() 
+    username = "neo4j"  # 更新为你的Neo4j用户名
+    password = "12345678"    # 更新为你的Neo4j密码
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+    session = driver.session()
     # print(query, params)
     try:
         result = session.run(query, params)
-        ans=result.data()
+        ans = result.data()
     except:
         return []
     return ans
 
+
 def matchjson(text):
     try:
         matches = str((ast.literal_eval(text))['cql'])
-        return matches 
+        return matches
     except:
         pass
     try:
         pattern = r'\{(.+)\}'
-        match=re.search(pattern, str(text)).group()
+        match = re.search(pattern, str(text)).group()
         matches = str((ast.literal_eval(match))['cql'])
     except Exception as e:
-        print(match,e)
+        print(match, e)
         return []
     print(matches)
-    return matches 
+    return matches
 
 
 @csrf_exempt
@@ -48,20 +51,21 @@ def getGptAnswer(request):
         model = str(request.POST.get('model'))
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
-    ans=getCqlGpt(text,model)
-    if ans==None:
-        ans="很抱歉无法理解您的问题，您可以使用如：“告诉我深圳市雄韬电源科技股份有限公司的上市时间”，“龙文是哪家公司的高管”等语句进行提问。"
-    print('ans的值为：',ans)
-    return json_response({"success": True,"content":ans,"log": "success"})
+    ans = getCqlGpt(text, model)
+    if ans == None:
+        ans = "很抱歉无法理解您的问题，您可以使用如：“告诉我深圳市雄韬电源科技股份有限公司的上市时间”，“龙文是哪家公司的高管”等语句进行提问。"
+    print('ans的值为：', ans)
+    return json_response({"success": True, "content": ans, "log": "success"})
 
-def getCqlGpt(sentence,model,flag=0):
-    if flag==3:
+
+def getCqlGpt(sentence, model, flag=0):
+    if flag == 3:
         print('回答失败1')
         return None
-    ques=sentence[-1]['content']
+    ques = sentence[-1]['content']
 
     try:
-        messages = [{"role": "system","content": "你是一个知识图谱的问答机器人。\
+        messages = [{"role": "system", "content": "你是一个知识图谱的问答机器人。\
                      1.你需要根据用户的提示给出neo4j数据库的cql查询语句。\
                      2.输出格式为:{'cql':'具体的cql语句'}\
                      3.neo4j数据库中有四类实体,标签为：\
@@ -80,7 +84,7 @@ def getCqlGpt(sentence,model,flag=0):
                      7.所有产业在查询时都不要带'产业'二字，例如我询问银行产业时，'Industry'的'name'为'银行'。\
                      8.理解以上内容回答我理解了。\
                      "},
-                    {'role': 'user','content': '用户的历史问答如下:'+str(sentence)+'\n\n请结合历史问答给出以下问题的的cql语句：'+ques}]
+                    {'role': 'user', 'content': '用户的历史问答如下:'+str(sentence)+'\n\n请结合历史问答给出以下问题的的cql语句：'+ques}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
@@ -97,40 +101,42 @@ def getCqlGpt(sentence,model,flag=0):
                 completion[delta_k] += delta_v
         messages.append(completion)  # 直接在传入参数 messages 中追加消息
         print(completion['content'])
-        middleans=matchjson(completion['content'])
+        middleans = matchjson(completion['content'])
         # print(middleans)
         # if middleans!=None and middleans!=[]:
-        database=execute_query(middleans)
-        print('cql为',database)
-        print('database为',database)
-        ans=getFinalAnsGpt(sentence,database,model,middleans,0)
+        database = execute_query(middleans)
+        print('cql为', database)
+        print('database为', database)
+        ans = getFinalAnsGpt(sentence, database, model, middleans, 0)
         return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
-        getCqlGpt(sentence,model,flag+1)
+        getCqlGpt(sentence, model, flag+1)
 
-def getFinalAnsGpt(sentence,middleans,model,cql,flag=0):
-    middle=str(sentence)
-    middle=middle.replace('(以上回答结合网站数据库)','')
-    middle=middle.replace('(以上回答来自ChatGPT)','')
-    print(sentence,middleans)
-    if flag==3:
+
+def getFinalAnsGpt(sentence, middleans, model, cql, flag=0):
+    middle = str(sentence)
+    middle = middle.replace('(以上回答结合网站数据库)', '')
+    middle = middle.replace('(以上回答来自ChatGPT)', '')
+    print(sentence, middleans)
+    if flag == 3:
         print('回答失败2')
         return None
-    ques=sentence[-1]['content']
-    middleans=middleans[0:1500]
-    if model=='0':
-        tone='以商务严谨的语气'
-    elif model=='1':
-        tone='以猫娘的语气和可爱的emoji表情'
-    elif model=='2':
-        tone='以傲娇的语气'
+    ques = sentence[-1]['content']
+    middleans = middleans[0:1500]
+    if model == '0':
+        tone = '以商务严谨的语气'
+    elif model == '1':
+        tone = '以猫娘的语气和可爱的emoji表情'
+    elif model == '2':
+        tone = '以傲娇的语气'
     else:
-        tone='以商务严谨的语气'
+        tone = '以商务严谨的语气'
     # openai.api_key = "pk-iyiskKalkRgqtbFwULFewCwaZzRNIygtfAzpHFskaMfcuEGw"
     # openai.api_base = 'https://api.pawan.krd/v1'
     try:
-        messages =[{"role": "system","content":"你是一个知识图谱的问答机器人。需要根据{用户的历史问答}和{结合问题查询的cql语句的含义}和{已经根据cql语句查询到的数据库信息}回答用户的问题。"},{'role': 'user','content': """用户的历史问答为:"""+middle+";\n"+"""用户当前问题为:"""+ques+";\nneo4j数据库运行的cql语句为:"+str(cql)+";\n运行该语句从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
+        messages = [{"role": "system", "content": "你是一个知识图谱的问答机器人。需要根据{用户的历史问答}和{结合问题查询的cql语句的含义}和{已经根据cql语句查询到的数据库信息}回答用户的问题。"}, {'role': 'user', 'content': """用户的历史问答为:""" +
+                                                                                                                                   middle+";\n"+"""用户当前问题为:"""+ques+";\nneo4j数据库运行的cql语句为:"+str(cql)+";\n运行该语句从neo4j数据库查询到的该问题的相关信息为："""+str(middleans)+""";\n\n请根据用户需求整理材料并"""+tone+"""给出回答"""}]
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo-16k',
             messages=messages,
@@ -146,15 +152,16 @@ def getFinalAnsGpt(sentence,middleans,model,cql,flag=0):
                 # print(f'流响应数据: {delta_k} = {delta_v}')
                 completion[delta_k] += delta_v
         messages.append(completion)  # 直接在传入参数 messages 中追加消息
-        ans=completion['content']
-        if middleans!=[]:
-            ans=ans+'(以上回答结合网站数据库)'
+        ans = completion['content']
+        if middleans != []:
+            ans = ans+'(以上回答结合网站数据库)'
         else:
-            ans=ans+'(以上回答来自ChatGPT)'
+            ans = ans+'(以上回答来自ChatGPT)'
         return ans
     except Exception as err:
         print((False, f'OpenAI API 异常: {err}'))
-        getFinalAnsGpt(sentence,middleans,model,cql,flag+1)
+        getFinalAnsGpt(sentence, middleans, model, cql, flag+1)
+
 
 @csrf_exempt
 def json_response(answer):
