@@ -122,7 +122,7 @@ def getStockMinuteInformation(stock, minute):
         # 将时间格式化为所需的字符串格式
         formatted_time = current_date.strftime("%Y-%m-%d")
         # 计算30天前的日期
-        days_before = datetime.timedelta(days=1)
+        days_before = datetime.timedelta(days=2)
         new_date = current_date - days_before
         # 将日期格式化为所需的字符串格式
         formatted_before_date = new_date.strftime("%Y-%m-%d")

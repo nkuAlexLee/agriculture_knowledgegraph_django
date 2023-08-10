@@ -54,6 +54,7 @@ def getGptAnswer(request):
     if request.method == "POST":
         text = json.loads(request.POST.get('history'))
         model = str(request.POST.get('model'))
+        # print("model1:",model)
     else:
         return json_response({"success": False, "log": "request_is_not_post"})
     ans = getCqlGpt(text, model)
@@ -129,6 +130,8 @@ def getFinalAnsGpt(sentence, middleans, model, cql, flag=0):
         return None
     ques = sentence[-1]['content']
     middleans = middleans[0:1500]
+    model=str(model)
+    print('model:',model)
     if model == '0':
         tone = '以商务严谨的语气'
     elif model == '1':
