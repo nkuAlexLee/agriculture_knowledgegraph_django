@@ -60,6 +60,9 @@ from knowledgegraph_django.views.stockmessage import (
     getStockAnswer,
     getStocklistAnswer,
 )
+from knowledgegraph_django.views.stockpredict import (
+    stockpredict,
+)
 urlpatterns = [
     # 其他URL配置
     path('admin/', admin.site.urls),
@@ -93,9 +96,10 @@ urlpatterns = [
     path('getNodeResume/', getNodeResume, name='getNodeResume'),
     path('searchRelationshipBetween/', searchRelationshipBetween,
          name='searchRelationshipBetween'),
-    path('setEncyContent', setEncyContent, name='setEncyContent'),
-    path('setMapContent', setMapContent, name='setMapContent'),
+    path('setEncyContent/', setEncyContent, name='setEncyContent'),
+    path('setMapContent/', setMapContent, name='setMapContent'),
     path('getOverview/', getOverview, name='getOverview'),
+    path('stockPredict/', stockpredict, name='stockPredict'),
     path("getGptAnswer/", getGptAnswer, name="get_gpt_answer"),
     path('getStockAnswer/', getStockAnswer, name='get_stock_answer,'),
     path('getStocklistAnswer/', getStocklistAnswer, name='get_stock_list_answer,')
