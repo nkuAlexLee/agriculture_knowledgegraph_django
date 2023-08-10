@@ -23,14 +23,18 @@ def execute_query(query, params={}):
     try:
         result = session.run(query, params)
         ans = result.data()
-    except:
+    except Exception as e:
+        print(e)
         return []
+    print(ans)
     return ans
 
 
 def matchjson(text):
     try:
-        matches = str((ast.literal_eval(text))['cql'])
+        json_ready_data = text.replace("'", "\"")
+        matches = str((json.loads(json_ready_data))['cql'])
+        print(matches)
         return matches
     except:
         pass
@@ -106,7 +110,7 @@ def getCqlGpt(sentence, model, flag=0):
         # print(middleans)
         # if middleans!=None and middleans!=[]:
         database = execute_query(middleans)
-        print('cql为', database)
+        print('cql为', middleans)
         print('database为', database)
         ans = getFinalAnsGpt(sentence, database, model, middleans, 0)
         return ans
