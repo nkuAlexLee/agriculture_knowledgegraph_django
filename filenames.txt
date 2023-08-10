@@ -1,0 +1,47 @@
+│  .hintrc
+│  filenames.txt
+│  manage.py
+│  
+├─document
+│      加密.md
+│      接口函数.md
+│      说明.txt
+│      
+├─knowledgegraph_django
+│  │  asgi.py
+│  │  settings.py
+│  │  urls.py
+│  │  utils.py
+│  │  wsgi.py
+│  │  __init__.py
+│  │  
+│  └─views
+│          AI.py
+│          defaultAvatar.py
+│          email.py
+│          neo4j.py
+│          stockmessage.py
+│          test.py
+│          user.py
+│          
+├─knowledgegraph_django_model
+│  │  admin.py
+│  │  apps.py
+│  │  models.py
+│  │  models_neo4j.py
+│  │  tests.py
+│  │  views.py
+│  │  __init__.py
+│  │  
+│  └─migrations
+│          0001_initial.py
+│          0002_rename_expire_sys_email_code_send_timestamp_and_more.py
+│          0003_remove_sys_user_feedback_id_remove_sys_user_ip_id_and_more.py
+│          0004_alter_sys_email_code_send_timestamp_and_more.py
+│          __init__.py
+│          
+└─test_files
+        index.html
+        test.ipynb
+        XMLConnector.js
+        
