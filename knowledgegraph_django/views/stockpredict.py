@@ -1,6 +1,5 @@
 import tushare as ts
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
@@ -12,7 +11,9 @@ import baostock as bs
 import copy
 ts.set_token('48acead4b9eb1e067bef2397bfc9308914469d05bdeb249924861800')
 pro = ts.pro_api()
-lg=bs.login()
+lg = bs.login()
+
+
 def format_stock(stock_code):
     pattern = r'\b\d{6}\b'
     try:
@@ -84,6 +85,7 @@ def format_Baostock_code(stock_code):
     else:
         return None
 
+
 def getStockId(stock):
     stockmid = format_stock(stock)
     print(stockmid)
@@ -101,6 +103,8 @@ def getStockId(stock):
         message["stockname"] = copy.deepcopy(stock)
         print(message)
     return message
+
+
 @csrf_exempt
 def stockpredict(request):
     try:
@@ -108,9 +112,9 @@ def stockpredict(request):
             stock_code = request.POST.get('stock_code')
         else:
             return json_response({'success': False})
-        message=getStockId(stock_code)
+        message = getStockId(stock_code)
         ts_code = message['stockid']
-        print('ts_code',ts_code)
+        print('ts_code', ts_code)
         data = pro.daily(ts_code=ts_code, start_date='20150301')
         data.to_csv(
             'knowledgegraph_django\stockcsv\data.csv', index=False)
@@ -118,7 +122,8 @@ def stockpredict(request):
             'knowledgegraph_django\stockcsv\data.csv', index_col=0, parse_dates=[0])
 
         # 将 trade_date 转换为日期格式
-        data['trade_date'] = pd.to_datetime(data['trade_date'], format='%Y%m%d')
+        data['trade_date'] = pd.to_datetime(
+            data['trade_date'], format='%Y%m%d')
 
         # 将 trade_date 设置为索引
         data.set_index('trade_date', inplace=True)
@@ -128,16 +133,15 @@ def stockpredict(request):
         # stock_week = data['close'].resample('W').mean()
         # stock_week
         stock_train = stock_day['2015':'2020'].dropna()
-        stock_train.plot(figsize=(12, 8))
         model = ARIMA(stock_train, order=(2, 0, 2))
         result = model.fit()
         result.summary()
         pred = result.predict(1500, 2000, dynamic=True)
         pred_array = pred.values.tolist()  # 转换为Python列表
-        return json_response({'success': True, 'content': {'data': pred_array,'message':message}})
+        return json_response({'success': True, 'content': {'data': pred_array, 'message': message}})
     except Exception as e:
         print(e)
-        return json_response({'success': False, 'content': {'data':[]}})
+        return json_response({'success': False, 'content': {'data': []}})
 
 
 @csrf_exempt
