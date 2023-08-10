@@ -116,7 +116,7 @@ def stockpredict(request):
         message = getStockId(stock_code)
         ts_code = message['stockid']
         print('ts_code', ts_code)
-        data = pro.daily(ts_code=ts_code, start_date='20150301')
+        data = pro.daily(ts_code=ts_code, start_date='20150101')
         data.to_csv(
             'knowledgegraph_django\stockcsv\data.csv', index=False)
         data = pd.read_csv(
@@ -133,15 +133,13 @@ def stockpredict(request):
         # 对数据进行重采样，以每周为单位计算 close 的均值
         # stock_week = data['close'].resample('W').mean()
         # stock_week
-        stock_train = stock_day['2010':'2020'].dropna()
+        stock_train = stock_day['2015':'2020'].dropna()
         model = ARIMA(stock_train, order=(2, 0, 2))
         result = model.fit()
         result.summary()
-        pred = result.predict(1500, 2100, dynamic=True)
+        pred = result.predict(1500, 2000, dynamic=True)
         pred_array = pred.values.tolist()  # 转换为Python列表
-        grouped_pred = [np.mean(pred_array[i:i+20])
-                        for i in range(0, len(pred_array), 20)]
-        return json_response({'success': True, 'content': {'data': grouped_pred, 'message': message}})
+        return json_response({'success': True, 'content': {'data': pred_array, 'message': message}})
     except Exception as e:
         print(e)
         return json_response({'success': False, 'content': {'data': []}})
