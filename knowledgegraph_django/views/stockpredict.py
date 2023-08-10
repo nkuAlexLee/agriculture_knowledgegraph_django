@@ -59,9 +59,9 @@ def stockpredict(request):
     print(ts_code)
     data = pro.daily(ts_code=ts_code, start_date='20150301')
     data.to_csv(
-        'agriculture_knowledgegraph_django\stockcsv\data.csv', index=False)
+        'knowledgegraph_django\stockcsv\data.csv', index=False)
     data = pd.read_csv(
-        'agriculture_knowledgegraph_django\stockcsv\data.csv', index_col=0, parse_dates=[0])
+        'knowledgegraph_django\stockcsv\data.csv', index_col=0, parse_dates=[0])
 
     # 将 trade_date 转换为日期格式
     data['trade_date'] = pd.to_datetime(data['trade_date'], format='%Y%m%d')

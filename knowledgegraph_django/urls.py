@@ -60,7 +60,7 @@ from knowledgegraph_django.views.stockmessage import (
     getStockAnswer,
     getStocklistAnswer,
 )
-from agriculture_knowledgegraph_django.views.stockpredict import (
+from knowledgegraph_django.views.stockpredict import (
     stockpredict,
 )
 urlpatterns = [
