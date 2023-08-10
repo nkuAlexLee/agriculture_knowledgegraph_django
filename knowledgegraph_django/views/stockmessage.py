@@ -149,8 +149,8 @@ def getStockMinuteInformation(stock, minute):
         # result.to_csv("D:\\history_A_stock_k_data.csv", index=False)
         # print(ans)
         #### 登出系统 ####
-
-        print(ans)
+        print(current_date,new_date)
+        # print(ans)
         return ans, message
     except Exception as e:
         print(e)
