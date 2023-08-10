@@ -168,13 +168,19 @@ def getNodeDetail(request):
 
     # 节点map_content返回
     nodes = graph.run(
-        f"MATCH (node) -[r]- (related) WHERE id(node)={id} RETURN type(r) AS relationship,id(STARTNODE(r)) AS start_id,STARTNODE(r).name AS start_name,id(ENDNODE(r)) AS end_id,ENDNODE(r).name AS end_name").data()
+        f"""MATCH (node) -[r]- (related) WHERE id(node)={id} 
+        RETURN type(r) AS relationship,id(STARTNODE(r)) AS start_id,STARTNODE(r).name AS start_name,
+        id(ENDNODE(r)) AS end_id,ENDNODE(r).name AS end_name,
+        r.controlRelationship AS controlrelationship,r.controlRation AS controlration,
+        r.investment AS investment,r.position AS position
+        """).data()
 
     map_content = f"""- 界面配置
 - 关系
 [[{name}]]
 """
     for record in nodes:
+        print(node)
         relationship = record['relationship']
         start_id = record['start_id']
         start_name = record['start_name']
@@ -183,7 +189,13 @@ def getNodeDetail(request):
 
         if relationship == "INVESTED_BY":
             relationship = "被投资"
-            relationship_desc = f"{start_name}是被{end_name}所投资的"
+            controlrelationship = record['controlrelationship']
+            controlration = record['controlration']
+            investment = record['investment']
+            if controlrelationship and controlration and investment:
+                relationship_desc = f"{start_name}是{end_name}的{controlrelationship}(控制比率为{controlration},投资金额为{investment})"
+            else:
+                relationship_desc = f"{start_name}由{end_name}所投资"
         elif relationship == "BELONGS_TO_INDUSTRY":
             relationship = "所属产业"
             relationship_desc = f"{start_name}的所属产业是{end_name}"
@@ -192,7 +204,11 @@ def getNodeDetail(request):
             relationship_desc = f"{end_name}是{start_name}的其中一个提供业务"
         elif relationship == "WORKS_FOR":
             relationship = "就职于"
-            relationship_desc = f"{start_name}就职于{end_name}"
+            position = record['position']
+            if position:
+                relationship_desc = f"{start_name}是{end_name}的{position}"
+            else:
+                relationship_desc = f"{start_name}就职于{end_name}"
 
         output = f"[[{start_id}|{start_name}]]--[[{end_id}|{end_name}]]={relationship}={relationship_desc}"
         map_content += (output + '\n')
