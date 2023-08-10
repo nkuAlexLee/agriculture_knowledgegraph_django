@@ -80,7 +80,7 @@ def stockpredict(request):
     result.summary()
     pred = result.predict(1500, 2000, dynamic=True)
     pred_array = pred.values.tolist()  # 转换为Python列表
-    return json_response({'success': True, 'data': pred_array})
+    return json_response({'success': True, 'content': {'data': pred_array}})
 
 
 @csrf_exempt
